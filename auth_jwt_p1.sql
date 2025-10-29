@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : mer. 29 oct. 2025 à 15:05
+-- Généré le : mer. 29 oct. 2025 à 21:28
 -- Version du serveur : 8.3.0
 -- Version de PHP : 8.2.18
 
@@ -29,10 +29,11 @@ SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `reservation`;
 CREATE TABLE IF NOT EXISTS `reservation` (
-  `id` int NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
   `user` int NOT NULL,
   `spectacle` int NOT NULL,
   `date` date NOT NULL,
+  PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `spectacle` (`spectacle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -66,6 +67,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `role` varchar(25) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
+  `refresh_token` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `refresh_token_expires_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
