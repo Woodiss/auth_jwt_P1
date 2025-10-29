@@ -15,6 +15,7 @@ use App\Security\AuthMiddleware;
 // --- JWT & Middleware ---
 $jwt = new JWT('ma_cle_secrete', 3600); // clé secrète et durée token
 $authMiddleware = new AuthMiddleware($jwt);
+$authController = new AuthController($userRepository, $twig, $jwt);
 
 // 3. Initialiser Twig
 $loader = new FilesystemLoader(__DIR__ . '/../templates');
@@ -41,7 +42,9 @@ $routes = [
   '/home' => [$spectacleController, 'home'],
   '/spectacles' => [$spectacleController, 'list'],
   '/profile' => [$userController, 'profile'], // ← route protégée
-  '/login' => fn() => print("Page de login"),
+  '/login'       => [$authController, 'login'],
+  '/register'    => [$authController, 'register'],
+  '/logout'      => [$authController, 'logout'],  
   '/refresh' => fn() => print("Route de refresh token"),
 ];
 
