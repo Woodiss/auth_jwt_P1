@@ -61,7 +61,18 @@ final class AuthController
             ]);
 
             $this->setJwtCookie($token);
+            $refreshToken = bin2hex(random_bytes(64)); // Token aléatoire sécurisé
+            $expiresAt = date('Y-m-d H:i:s', time() + 7 * 24 * 60 * 60); // 7 jours
 
+            $repo->saveRefreshToken($user->getId(), $refreshToken, $expiresAt);
+
+            setcookie('jwt_Refresh_P1', $refreshToken, [
+              'expires' => time() + 7 * 24 * 60 * 60,
+              'path' => '/',
+              'httponly' => true,
+              'samesite' => 'Lax',
+              // 'secure' => true, // à activer si HTTPS
+            ]);
             // PRG : redirection vers le profil
             header('Location: ' . $this->basePath . '/profile', true, 303);
             exit;
@@ -130,6 +141,13 @@ final class AuthController
   public function logout(): void
   {
     $this->unsetJwtCookie();
+    setcookie('jwt_Refresh_P1', '', [
+      'expires'  => time() - 3600,
+      'path'     => '/',
+      'secure'   => !empty($_SERVER['HTTPS']),
+      'httponly' => true,
+      'samesite' => 'Lax',
+    ]);
     header('Location: ' . $this->basePath . '/login', true, 303);
     exit;
   }
@@ -154,5 +172,40 @@ final class AuthController
       'httponly' => true,
       'samesite' => 'Lax',
     ]);
+  }
+  public function refresh(): void
+  {
+    $refreshToken = $_COOKIE['jwt_Refresh_P1'] ?? null;
+    if (!$refreshToken) {
+      http_response_code(401);
+      echo json_encode(['error' => 'Missing refresh token']);
+      return;
+    }
+
+    $repo = new UserRepository();
+    $user = $repo->findByRefreshToken($refreshToken);
+    if (!$user) {
+      http_response_code(403);
+      echo json_encode(['error' => 'Invalid or expired refresh token']);
+      return;
+    }
+
+    // Nouveau access token JWT (15 min)
+    $accessToken = $this->jwt->generate([
+      'id' => $user->getId(),
+      'email' => $user->getEmail(),
+      'role' => $user->getRole(),
+      'firstname' => $user->getFirstname(),
+      'lastname' => $user->getLastname(),
+    ], 900);
+
+    setcookie('jwt_Auth_P1', $accessToken, [
+      'expires' => time() + 900,
+      'path' => '/',
+      'httponly' => true,
+      'samesite' => 'Lax',
+    ]);
+
+    echo json_encode(['status' => 'Access token refreshed']);
   }
 }

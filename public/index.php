@@ -32,7 +32,7 @@ $route = empty($route) || $route === '/' ? '/home' : $route;
 
 // --- Contrôleurs ---
 $spectacleController = new SpectacleController($twig, $authMiddleware);
-$userController = new UserController($twig);
+$userController = new UserController($twig, $authMiddleware);
 $authController = new AuthController($twig, $jwt, $basePath);
 $routes = [
   '/home' => [$spectacleController, 'home'],
