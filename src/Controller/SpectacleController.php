@@ -49,6 +49,9 @@ class SpectacleController
       ['id' => 2, 'title' => 'Mamma Mia!']
     ];
 
+    $repoSpectacle = new SpectacleRepository();
+    $spectacles = $repoSpectacle->findAll();
+
     echo $this->twig->render('spectacles/list.html.twig', [
       'spectacles' => $spectacles
     ]);

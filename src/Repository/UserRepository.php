@@ -23,25 +23,35 @@ final class UserRepository
         return $row ?: null;
     }
 
-    public function findByEmail(string $email): ?array
+    public function findByEmail(string $email): ?User
     {
         $stmt = $this->pdo->prepare('SELECT * FROM user WHERE email = ?');
         $stmt->execute([$email]);
         $row = $stmt->fetch();
-        return $row ?: null;
+        if (!$row) {
+            return null;
+        }
+
+        return new User(
+            id:          (int)$row['id'],
+            firstName:   $row['firstname'],
+            lastName:    $row['lastname'],
+            email:       $row['email'],
+            passwordHash:$row['password'],
+            role:        $row['role']
+        );
     }
 
     public function create(User $user): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO `user`(`firstname`, `lastname`, `email`, `password`, `role`) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO `user`(`firstname`, `lastname`, `email`, `password`) VALUES (?, ?, ?, ?)'
         );
         $stmt->execute([
             $user->getFirstname(),
             $user->getLastname(),
             $user->getEmail(),
-            $user->getPassword(),
-            $user->getRole()
+            $user->getPasswordHash(),
         ]);
 
         return (int) $this->pdo->lastInsertId();

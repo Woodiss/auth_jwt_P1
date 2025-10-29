@@ -10,19 +10,24 @@ final class User
     private string $lastName;
     private string $email;
     private string $passwordHash;
+    private string $role = 'user';
 
     public function __construct(
         string $firstName,
         string $lastName,
         string $email,
         string $passwordHash,
-        ?int $id = null
+        ?int $id = null,
+        ?string $role = null
     ) {
         $this->id = $id;
         $this->firstName = $firstName;
         $this->lastName  = $lastName;
         $this->email = $email;
         $this->passwordHash = $passwordHash;
+        if ($role !== null) {
+            $this->role = $role;
+        }
     }
 
     public function getId(): ?int { return $this->id; }
@@ -32,6 +37,7 @@ final class User
     public function getLastName(): string  { return $this->lastName; }
     public function getEmail(): string     { return $this->email; }
     public function getPasswordHash(): string { return $this->passwordHash; }
+    public function getRole(): string { return $this->role; }
 
     public function getFullName(): string
     {

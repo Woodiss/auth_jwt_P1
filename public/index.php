@@ -8,11 +8,12 @@ use App\Controller\UserController;
 use App\Security\JWT;
 use App\Security\AuthMiddleware;
 use App\Security\Authenticated;
+use App\Controller\AuthController;
 
 // --- JWT & Middleware ---
 $jwt = new JWT('ma_cle_secrete', 3600);
 $authMiddleware = new AuthMiddleware($jwt);
-$authController = new AuthController($userRepository, $twig, $jwt);
+
 
 // --- Initialiser Twig ---
 $loader = new FilesystemLoader(__DIR__ . '/../templates');
@@ -32,6 +33,7 @@ $route = empty($route) || $route === '/' ? '/home' : $route;
 // --- Contrôleurs ---
 $spectacleController = new SpectacleController($twig);
 $userController = new UserController($twig);
+$authController = new AuthController($twig, $jwt);
 $routes = [
   '/home' => [$spectacleController, 'home'],
   '/spectacles' => [$spectacleController, 'list'],

@@ -2,7 +2,7 @@
 namespace App\Repository;
 
 use PDO;
-use App\Database\Connexion; // ← adapte ce namespace si besoin
+use App\Database\Connexion;
 use App\Entity\Spectacle;
 
 final class SpectacleRepository
@@ -50,12 +50,12 @@ final class SpectacleRepository
     /**
      * READ (liste) — liste paginée, triée par date.
      */
-    public function all(int $limit = 100, int $offset = 0): array
+    public function findAll(int $limit = 100, int $offset = 0): array
     {
         $limit  = max(0, (int)$limit);
         $offset = max(0, (int)$offset);
 
-        $sql = 'SELECT id, titre, description, date_spectacle, created_at
+        $sql = 'SELECT *
                 FROM spectacles
                 ORDER BY date_spectacle ASC
                 LIMIT :limit OFFSET :offset';

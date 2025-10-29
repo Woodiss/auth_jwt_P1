@@ -7,9 +7,20 @@
     <h1>Spectacles</h1> {# 'message' vient du contrôleur #}
     
 
-    <ul>
+    {# <ul> #}
       {% for spectacle in spectacles%}
-        <a href="{{ basePath }}/spectacles/{{spectacle.id}}"><li>{{spectacle.title}}</li></a>
+        <article>
+          <header>
+            <h2>{{spectacle.title}}</h2>
+          </header>
+          <p>
+            {{spectacle.description}}
+          </p>
+          <footer>
+            <button><a href="{{ basePath }}/spectacles/{{spectacle.id}}">Plus d'info</button>
+          </footer>
+        </article>
+        {# <a href="{{ basePath }}/spectacles/{{spectacle.id}}"><li>{{spectacle.title}}</li></a> #}
       {% endfor %}
-    </ul>
+    {# </ul> #}
 {% endblock %}
