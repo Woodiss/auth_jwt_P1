@@ -11,17 +11,25 @@ class AuthMiddleware
     $this->jwt = $jwt;
   }
 
+
   public function requireAuth(array $requiredRoles = []): array
   {
+    // 1. Cherche le token dans le header Authorization
     $headers = apache_request_headers();
     $authHeader = $headers['Authorization'] ?? '';
 
-    if (!str_starts_with($authHeader, 'Bearer ')) {
+    if (str_starts_with($authHeader, 'Bearer ')) {
+      $token = substr($authHeader, 7);
+    } else {
+      // 2. Sinon cherche dans le cookie 'jwt'
+      $token = $_COOKIE['jwt_Auth_P1'] ?? '';
+    }
+
+    if (!$token) {
       http_response_code(401);
       exit('Token manquant');
     }
 
-    $token = substr($authHeader, 7);
     $payload = $this->jwt->verify($token);
 
     if (!$payload) {

@@ -14,25 +14,39 @@ class SpectacleController
   // On "injecte" Twig pour que le contrôleur puisse l'utiliser
   private Environment $twig;
 
-  public function __construct(Environment $twig)
+  private \App\Security\AuthMiddleware $auth;
+
+  public function __construct(\Twig\Environment $twig, \App\Security\AuthMiddleware $auth)
   {
     $this->twig = $twig;
+    $this->auth = $auth;
   }
 
   /**
    * Méthode pour la page d'accueil
    */
+
   public function home(): void
   {
-    // ... (logique pour savoir si l'utilisateur est connecté, etc.)
+    $user = null;
 
-    $user = [
-      "id" => 1,
-      "firstname" => "Jhon",
-      "lastname" => "Doe"
-    ]; // À remplacer par le vrai nom si connecté
+    // Essaie de récupérer l'utilisateur connecté sans bloquer si non connecté
+    $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
+    if ($payload) {
+      $userData = $this->auth->requireAuth([]); // [] = pas de restriction de rôle
+      var_dump($userData);
+      if ($userData) {
+        $user = [
+          'id'       => $userData['id'],
+          'firstname'       => $userData['firstname'],
+          'lastname'       => $userData['lastname'],
+          'email'    => $userData['email'],
+          'role'     => $userData['role'],
+          'fullname' => $userData['name'],
+        ];
+      }
+    }
 
-    // Le contrôleur fait son travail : il rend un template
     echo $this->twig->render('index.html.twig', [
       'user' => $user
     ]);
@@ -57,7 +71,7 @@ class SpectacleController
     /* $spectacle = $this->getSpectacleById($id); */
     $repoSpectacle = new SpectacleRepository();
     $spectacle = $repoSpectacle->find($id);
-    
+
     if (!$spectacle) {
       http_response_code(404);
       echo $this->twig->render('error.html.twig', [

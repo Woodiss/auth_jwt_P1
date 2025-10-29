@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -10,147 +11,148 @@ use Twig\Environment as Twig;
 
 final class AuthController
 {
-    public function __construct(
-        private Twig $twig,            // rendu des vues
-        private JWT $jwt,              // ton service JWT maison
-    ) {}
+  private string $basePath;
 
-    /** GET/POST /login */
-    public function login(): void
-    {
-        $data = [
-            'email'    => $_POST['email'] ?? '',
-            'password' => $_POST['password'] ?? '',
-        ];
+  public function __construct(
+    private Twig $twig,   // rendu des vues
+    private JWT $jwt,
+    string $basePath
+  ) {
+    $this->basePath = $basePath;
+  }
 
-        $errors  = [];
-        $success = false;
+  /** GET/POST /login */
+  public function login(): void
+  {
+    $data = [
+      'email'    => $_POST['email'] ?? '',
+      'password' => $_POST['password'] ?? '',
+    ];
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = array_map('trim', $data);
+    $errors  = [];
+    $success = false;
 
-            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $errors['email'] = 'Email invalide.';
-            }
-            if ($data['password'] === '') {
-                $errors['password'] = 'Le mot de passe est obligatoire.';
-            }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      $data = array_map('trim', $data);
 
-            if (!$errors) {
-                try {
-                    $repo = new UserRepository();
-                    $user = $repo->findByEmail($data['email']);
+      if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        $errors['email'] = 'Email invalide.';
+      }
+      if ($data['password'] === '') {
+        $errors['password'] = 'Le mot de passe est obligatoire.';
+      }
 
-                    if (!$user || !password_verify($data['password'], $user->getPasswordHash())) {
-                        $errors['global'] = 'Email ou mot de passe incorrect.';
-                    } else {
+      if (!$errors) {
+        try {
+          $repo = new UserRepository();
+          $user = $repo->findByEmail($data['email']);
 
-                        // Générer le JWT et poser le cookie
-                        $token = $this->jwt->generate([
-                            'sub'   => $user->getId(),
-                            'email' => $user->getEmail(),
-                            'role'  => $user->getRole(),
-                            'name'  => $user->getFullname(),
-                        ]);
-                        // $this->setJwtCookie($token);
+          if (!$user || !password_verify($data['password'], $user->getPasswordHash())) {
+            $errors['global'] = 'Email ou mot de passe incorrect.';
+          } else {
+            // Générer le JWT et poser le cookie
+            $token = $this->jwt->generate([
+              'id'   => $user->getId(),
+              'firstname' => $user->getFirstName(),
+              'lastname' => $user->getLastName(),
+              'email' => $user->getEmail(),
+              'role'  => $user->getRole(),
+              'name'  => $user->getFullname(),
+            ]);
 
-                        // PRG (recommandé)
-                        // header('Location: /profile', true, 303); exit;
+            $this->setJwtCookie($token);
 
-                        $success = true;
-                        // Réinitialiser le formulaire si tu restes sur la même page
-                        $data = ['email' => '', 'password' => ''];
-                        header('Location: ./home', true, 303);
-                    }
-                } catch (\Throwable $e) {
-                    $errors['global'] = "Erreur lors de la connexion.";
-                }
-            }
+            // PRG : redirection vers le profil
+            header('Location: ' . $this->basePath . '/profile', true, 303);
+            exit;
+          }
+        } catch (\Throwable $e) {
+          $errors['global'] = "Erreur lors de la connexion.";
         }
-
-        echo $this->twig->render('login.html.twig', [
-            'data'    => $data,
-            'errors'  => $errors,
-            'success' => $success,
-        ]);
+      }
     }
 
+    echo $this->twig->render('login.html.twig', [
+      'data'    => $data,
+      'errors'  => $errors,
+      'success' => $success,
+    ]);
+  }
 
-    /** GET/POST /register (si tu souhaites l’exposer) */
-    public function register(): void
-    {
-        $data = [
-            'firstname' => $_POST['firstname'] ?? '',
-            'lastname' => $_POST['lastname'] ?? '',
-            'email' => $_POST['email'] ?? '',
-            'password' => $_POST['password'] ?? '',
-        ];
+  /** GET/POST /register */
+  public function register(): void
+  {
+    $data = [
+      'firstname' => $_POST['firstname'] ?? '',
+      'lastname'  => $_POST['lastname'] ?? '',
+      'email'     => $_POST['email'] ?? '',
+      'password'  => $_POST['password'] ?? '',
+    ];
 
-        $errors = [];
-        $success = false;
+    $errors  = [];
+    $success = false;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = array_map('trim', $data);
-            if ($data['firstname'] === '')    $errors['firstname'] = 'Le prénom est obligatoire.';
-            if ($data['lastname'] === '')     $errors['lastname'] = 'Le nom est obligatoire.';
-            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Email invalide.';
-            if (strlen($data['password']) < 8) $errors['password'] = 'Le mot de passe doit faire au moins 8 caractères.';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+      $data = array_map('trim', $data);
 
-            if (!$errors) {
-                $user = new User(
-                    firstName: $data['firstname'],
-                    lastName: $data['lastname'],
-                    email: $data['email'],
-                    passwordHash: password_hash($data['password'], PASSWORD_DEFAULT)
-                );
+      if ($data['firstname'] === '')    $errors['firstname'] = 'Le prénom est obligatoire.';
+      if ($data['lastname'] === '')     $errors['lastname'] = 'Le nom est obligatoire.';
+      if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'Email invalide.';
+      if (strlen($data['password']) < 8) $errors['password'] = 'Le mot de passe doit faire au moins 8 caractères.';
 
-                try {
-                    (new UserRepository())->create($user);
-                    // PRG (recommandé) :
-                    // header('Location: /spectacles/new?success=1'); exit;
-                    $success = true;
-                    $data = ['title' => '', 'description' => '', 'director' => ''];
-                } catch (\Throwable $e) {
-                    $errors['global'] = "Erreur lors de l'enregistrement.";
-                }
-            }
+      if (!$errors) {
+        $user = new User(
+          firstName: $data['firstname'],
+          lastName: $data['lastname'],
+          email: $data['email'],
+          passwordHash: password_hash($data['password'], PASSWORD_DEFAULT)
+        );
+
+        try {
+          (new UserRepository())->create($user);
+          $success = true;
+          // Réinitialiser le formulaire
+          $data = ['firstname' => '', 'lastname' => '', 'email' => '', 'password' => ''];
+        } catch (\Throwable $e) {
+          $errors['global'] = "Erreur lors de l'enregistrement.";
         }
-
-        echo $this->twig->render('register.html.twig', [
-            // 'fields'  => $fields,
-            'data'    => $data,
-            'errors'  => $errors,
-            'success' => $success,
-        ]);
+      }
     }
 
-    /** POST /logout (recommandé) */
-    public function logout(): void
-    {
-        $this->unsetJwtCookie();
-        header('Location: /login', true, 303);
-        exit;
-    }
+    echo $this->twig->render('register.html.twig', [
+      'data'    => $data,
+      'errors'  => $errors,
+      'success' => $success,
+    ]);
+  }
 
-    private function setJwtCookie(string $token): void
-    {
-        setcookie('jwt', $token, [
-            'expires'  => 0,             // token porte sa propre exp ; cookie session
-            'path'     => '/',
-            'secure'   => !empty($_SERVER['HTTPS']),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
+  /** POST /logout */
+  public function logout(): void
+  {
+    $this->unsetJwtCookie();
+    header('Location: ' . $this->basePath . '/login', true, 303);
+    exit;
+  }
 
-    private function unsetJwtCookie(): void
-    {
-        setcookie('jwt', '', [
-            'expires'  => time() - 3600,
-            'path'     => '/',
-            'secure'   => !empty($_SERVER['HTTPS']),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
+  private function setJwtCookie(string $token): void
+  {
+    setcookie('jwt_Auth_P1', $token, [
+      'expires'  => 0,             // token porte sa propre exp ; cookie session
+      'path'     => '/',
+      'secure'   => !empty($_SERVER['HTTPS']),
+      'httponly' => true,
+      'samesite' => 'Lax',
+    ]);
+  }
+
+  private function unsetJwtCookie(): void
+  {
+    setcookie('jwt', '', [
+      'expires'  => time() - 3600,
+      'path'     => '/',
+      'secure'   => !empty($_SERVER['HTTPS']),
+      'httponly' => true,
+      'samesite' => 'Lax',
+    ]);
+  }
 }
