@@ -7,6 +7,7 @@ use Twig\Environment; // On aura besoin de Twig
 use App\Form\SpectacleType;
 use App\Repository\SpectacleRepository;
 
+use App\Security\Authenticated;
 
 class SpectacleController
 {
@@ -44,15 +45,37 @@ class SpectacleController
   {
     // Données "mock" (en attendant une BDD)
     $spectacles = [
-      ['id' => 1, 'nom' => 'Le Roi Lion'],
-      ['id' => 2, 'nom' => 'Mamma Mia!']
+      ['id' => 1, 'title' => 'Le Roi Lion'],
+      ['id' => 2, 'title' => 'Mamma Mia!']
     ];
 
     echo $this->twig->render('spectacles/list.html.twig', [
       'spectacles' => $spectacles
     ]);
   }
+  public function show(int $id)
+  {
+    /* $spectacle = $this->getSpectacleById($id); */
+    $spectacle = [
+      "id" => 1,
+      "title" => "NomDuSpectacle",
+      "description" => "description du spectacle",
+      "director" => "Lorem Ipsum"
+    ];
 
+    if (!$spectacle) {
+      http_response_code(404);
+      echo $this->twig->render('404.html.twig', [
+        'message' => "Spectacle introuvable."
+      ]);
+      return;
+    }
+
+    echo $this->twig->render('spectacles/show.html.twig', [
+      'spectacle' => $spectacle
+    ]);
+  }
+  #[Authenticated(roles: ['admin'])]
   public function new(): void
   {
       $fields = SpectacleType::getFields();
