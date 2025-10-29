@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Spectacle;
 use Twig\Environment; // On aura besoin de Twig
 use App\Form\SpectacleType;
+use App\Repository\SpectacleRepository;
 
 
 class SpectacleController
@@ -53,39 +54,47 @@ class SpectacleController
   }
 
   public function new(): void
-    {
-        $fields = SpectacleType::getFields();
+  {
+      $fields = SpectacleType::getFields();
 
-        $data = [
-            'title' => $_POST['title'] ?? '',
-            'description' => $_POST['description'] ?? '',
-            'director' => $_POST['director'] ?? '',
-        ];
+      $data = [
+          'title' => $_POST['title'] ?? '',
+          'description' => $_POST['description'] ?? '',
+          'director' => $_POST['director'] ?? '',
+      ];
 
-        $errors = [];
-        $success = false;
+      $errors = [];
+      $success = false;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (trim($data['title']) === '') {
-                $errors['title'] = 'Le titre est obligatoire.';
-            }
-            if (trim($data['director']) === '') {
-                $errors['director'] = 'Le metteur en scène est obligatoire.';
-            }
+      if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+          $data = array_map('trim', $data);
+          if ($data['title'] === '')    $errors['title'] = 'Le titre est obligatoire.';
+          if ($data['director'] === '') $errors['director'] = 'Le metteur en scène est obligatoire.';
 
-            if (empty($errors)) {
-                // Simulation d'enregistrement OK
-                $success = true;
-                $data = ['title' => '', 'description' => '', 'director' => ''];
-            }
-        }
+          if (!$errors) {
+              $spectacle = new Spectacle(
+                  title: $data['title'],
+                  description: $data['description'] ?: null,
+                  director: $data['director']
+              );
 
-        echo $this->twig->render('spectacles/new.html.twig', [
-            'fields' => $fields,
-            'data' => $data,
-            'errors' => $errors,
-            'success' => $success,
-        ]);
-    }
+              try {
+                  (new SpectacleRepository())->create($spectacle);
+                  // PRG (recommandé) :
+                  // header('Location: /spectacles/new?success=1'); exit;
+                  $success = true;
+                  $data = ['title' => '', 'description' => '', 'director' => ''];
+              } catch (\Throwable $e) {
+                  $errors['global'] = "Erreur lors de l'enregistrement.";
+              }
+          }
+      }
 
+      echo $this->twig->render('spectacles/new.html.twig', [
+          'fields'  => $fields,
+          'data'    => $data,
+          'errors'  => $errors,
+          'success' => $success,
+      ]);
+  }
 }
