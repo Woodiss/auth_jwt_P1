@@ -33,9 +33,9 @@ class ReservationRepository
     {
         $sql = '
             SELECT r.id, r.date, s.title, s.description
-            FROM reservations r
-            JOIN spectacles s ON r.spectacle_id = s.id
-            WHERE r.user_id = :user_id
+            FROM reservation r
+            JOIN spectacle s ON r.spectacle = s.id
+            WHERE r.user = :user_id
         ';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['user_id' => $userId]);

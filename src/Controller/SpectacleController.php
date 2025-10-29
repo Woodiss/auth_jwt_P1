@@ -155,7 +155,7 @@ class SpectacleController
     }
 
     $reservation = new Reservation(
-        userId: 1, 
+        userId: 1,
         spectacleId: (int)$spectacleId,
         date: $reservationDateTime
     );
