@@ -8,15 +8,16 @@ use App\Form\SpectacleType;
 use App\Repository\SpectacleRepository;
 
 use App\Security\Authenticated;
+use App\Security\AuthMiddleware;
 
 class SpectacleController
 {
   // On "injecte" Twig pour que le contrôleur puisse l'utiliser
   private Environment $twig;
 
-  private \App\Security\AuthMiddleware $auth;
+  private AuthMiddleware $auth;
 
-  public function __construct(\Twig\Environment $twig, \App\Security\AuthMiddleware $auth)
+  public function __construct(\Twig\Environment $twig, AuthMiddleware $auth)
   {
     $this->twig = $twig;
     $this->auth = $auth;
@@ -36,7 +37,7 @@ class SpectacleController
       'lastname'  => $userData['lastname'],
       'email'     => $userData['email'],
       'role'      => $userData['role'],
-      'fullname'  => $userData['name'],
+      'fullname'  => $userData['fullname'],
     ];
   }
   /**
@@ -92,6 +93,7 @@ class SpectacleController
   #[Authenticated(roles: ['admin'])]
   public function new(): void
   {
+    $user = $this->getUser();
     $fields = SpectacleType::getFields();
 
     $data = [
@@ -132,6 +134,7 @@ class SpectacleController
       'data'    => $data,
       'errors'  => $errors,
       'success' => $success,
+      'user' => $user
     ]);
   }
 }

@@ -37,7 +37,7 @@ class AuthMiddleware
     // 3️⃣ Si token absent ou expiré, tente un refresh automatique
     if (!$payload && isset($_COOKIE['jwt_Refresh_P1'])) {
       $refreshToken = $_COOKIE['jwt_Refresh_P1'];
-
+      var_dump($_COOKIE['jwt_Refresh_P1']);
       $repo = new \App\Repository\UserRepository();
       $user = $repo->findByRefreshToken($refreshToken);
       var_dump($user);
@@ -49,6 +49,7 @@ class AuthMiddleware
           'role'      => $user->getRole(),
           'firstname' => $user->getFirstName(),
           'lastname'  => $user->getLastName(),
+          'fullname' => $user->getFullName()
         ]);
 
         // Remplace le cookie existant
@@ -60,7 +61,8 @@ class AuthMiddleware
         ]);
 
         // Vérifie immédiatement le nouveau token pour le payload
-        $payload = $this->jwt->verify($newAccessToken);
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
       }
     }
 

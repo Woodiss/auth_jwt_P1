@@ -57,7 +57,7 @@ final class AuthController
               'lastname' => $user->getLastName(),
               'email' => $user->getEmail(),
               'role'  => $user->getRole(),
-              'name'  => $user->getFullname(),
+              'fullname'  => $user->getFullname(),
             ]);
 
             $this->setJwtCookie($token);

@@ -3,13 +3,14 @@
 namespace App\Controller;
 
 use App\Security\Authenticated;
+use App\Security\AuthMiddleware;
 
 class UserController
 {
   private $twig;
-  private \App\Security\AuthMiddleware $auth;
+  private AuthMiddleware $auth;
 
-  public function __construct($twig, \App\Security\AuthMiddleware $auth)
+  public function __construct($twig, AuthMiddleware $auth)
   {
     $this->twig = $twig;
     $this->auth = $auth;
@@ -21,14 +22,14 @@ class UserController
 
     $userData = $this->auth->requireAuth([]);
     if (!$userData) return null;
-
+    var_dump($userData);
     return [
       'id'        => $userData['id'],
       'firstname' => $userData['firstname'],
       'lastname'  => $userData['lastname'],
       'email'     => $userData['email'],
       'role'      => $userData['role'],
-      'fullname'  => $userData['name'],
+      'fullname'  => $userData['fullname'],
     ];
   }
 
