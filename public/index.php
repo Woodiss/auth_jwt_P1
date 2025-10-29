@@ -40,7 +40,7 @@ $routes = [
   '/profile' => [$userController, 'profile'], // ← route protégée
   '/login'       => [$authController, 'login'],
   '/register'    => [$authController, 'register'],
-  '/logout'      => [$authController, 'logout'],  
+  '/logout'      => [$authController, 'logout'],
   '/spectacles/new' => [$spectacleController, 'new'],
   '/refresh' => fn() => print("Route de refresh token"),
 ];
@@ -72,5 +72,8 @@ if (isset($routes[$route])) {
   }
 } else {
   http_response_code(404);
-  echo $twig->render('404.html.twig');
+  echo $twig->render('error.html.twig', [
+    'code' => 404,
+    'message' => "Page non trouvée 😢"
+  ]);
 }
