@@ -53,39 +53,37 @@ class SpectacleController
   }
 
   public function new(): void
-    {
-        $fields = SpectacleType::getFields();
+  {
+    $fields = SpectacleType::getFields();
 
-        $data = [
-            'title' => $_POST['title'] ?? '',
-            'description' => $_POST['description'] ?? '',
-            'director' => $_POST['director'] ?? '',
-        ];
+    $data = [
+        'title' => $_POST['title'] ?? '',
+        'description' => $_POST['description'] ?? '',
+        'director' => $_POST['director'] ?? '',
+    ];
 
-        $errors = [];
-        $success = false;
+    $errors = [];
+    $success = false;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (trim($data['title']) === '') {
-                $errors['title'] = 'Le titre est obligatoire.';
-            }
-            if (trim($data['director']) === '') {
-                $errors['director'] = 'Le metteur en scène est obligatoire.';
-            }
-
-            if (empty($errors)) {
-                // Simulation d'enregistrement OK
-                $success = true;
-                $data = ['title' => '', 'description' => '', 'director' => ''];
-            }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (trim($data['title']) === '') {
+            $errors['title'] = 'Le titre est obligatoire.';
+        }
+        if (trim($data['director']) === '') {
+            $errors['director'] = 'Le metteur en scène est obligatoire.';
         }
 
-        echo $this->twig->render('spectacles/new.html.twig', [
-            'fields' => $fields,
-            'data' => $data,
-            'errors' => $errors,
-            'success' => $success,
-        ]);
+        if (empty($errors)) {
+            $success = true;
+        }
     }
+
+    echo $this->twig->render('spectacles/new.html.twig', [
+        'fields' => $fields,
+        'data' => $data,
+        'errors' => $errors,
+        'success' => $success,
+    ]);
+  }
 
 }
