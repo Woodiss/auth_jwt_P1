@@ -37,6 +37,7 @@ $authController = new AuthController($twig, $jwt);
 $routes = [
   '/home' => [$spectacleController, 'home'],
   '/spectacles' => [$spectacleController, 'list'],
+  '/spectacles/reservation' => [$spectacleController, 'reservation'],
   '/profile' => [$userController, 'profile'], // ← route protégée
   '/login'       => [$authController, 'login'],
   '/register'    => [$authController, 'register'],

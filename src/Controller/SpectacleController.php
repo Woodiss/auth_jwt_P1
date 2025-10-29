@@ -6,6 +6,8 @@ use App\Entity\Spectacle;
 use Twig\Environment; // On aura besoin de Twig
 use App\Form\SpectacleType;
 use App\Repository\SpectacleRepository;
+use App\Entity\Reservation;
+use App\Repository\ReservationRepository;
 
 use App\Security\Authenticated;
 
@@ -71,7 +73,7 @@ class SpectacleController
       'spectacle' => $spectacle
     ]);
   }
-  #[Authenticated(roles: ['admin'])]
+  // #[Authenticated(roles: ['admin'])]
   public function new(): void
   {
     $fields = SpectacleType::getFields();
@@ -116,4 +118,57 @@ class SpectacleController
       'success' => $success,
     ]);
   }
+
+  public function reservation(): void
+  {
+    $reservationDate = $_POST['reservation_date'] ?? null;
+    $spectacleId = $_POST['spectacle_id'] ?? null;
+    $errors = [];
+
+    if (!$spectacleId) {
+        echo "Spectacle non spécifié.";
+        return;
+    }
+
+    if (!$reservationDate) {
+        $errors['reservation_date'] = "La date de réservation est obligatoire.";
+    } else {
+        // Vérifiez que la date est dans le futur
+        $reservationDateTime = new \DateTime($reservationDate);
+        $currentDateTime = new \DateTime();
+
+        if ($reservationDateTime <= $currentDateTime) {
+            $errors['reservation_date'] = "La date de réservation doit être dans le futur.";
+        }
+    }
+
+    if (!empty($errors)) {
+        // Renvoyez les erreurs au formulaire
+        $repoSpectacle = new SpectacleRepository();
+        $spectacle = $repoSpectacle->find($spectacleId);
+
+        echo $this->twig->render('spectacles/show.html.twig', [
+            'spectacle' => $spectacle,
+            'errors' => $errors,
+        ]);
+        return;
+    }
+
+    $reservation = new Reservation(
+        userId: 1, 
+        spectacleId: (int)$spectacleId,
+        date: $reservationDateTime
+    );
+
+    try {
+        (new ReservationRepository())->create($reservation);
+        header('Location: ./../home', true, 303);
+        exit;
+    } catch (\Throwable $e) {
+        echo "Erreur lors de la réservation.";
+    }
+
+  }
 }
+
+ 
