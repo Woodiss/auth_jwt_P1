@@ -9,7 +9,7 @@
 
     {# C'est une contrainte : afficher le nom si l'utilisateur est identifié #}
     {% if user %}
-        <p>Heureux de vous revoir, <strong>"{{ user.firstname }} {{user.lastname}}"</strong> !</p>
+        <p>Heureux de vous revoir, <strong>{{ user.firstname }} {{user.lastname}}</strong> !</p>
     {% else %}
         <p>Veuillez vous <a href="/login">connecter</a> pour réserver.</p>
     {% endif %}
