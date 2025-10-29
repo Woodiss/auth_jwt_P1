@@ -16,7 +16,7 @@ final class UserRepository
 
     public function find(int $id): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, email, name, password_hash, roles_json FROM users WHERE id = ?');
+        $stmt = $this->pdo->prepare('SELECT * FROM user WHERE id = ?');
         $stmt->execute([$id]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -24,23 +24,23 @@ final class UserRepository
 
     public function findByEmail(string $email): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT id, email, name, password_hash, roles_json FROM users WHERE email = ?');
+        $stmt = $this->pdo->prepare('SELECT * FROM user WHERE email = ?');
         $stmt->execute([$email]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
 
-    public function create(string $email, string $passwordHash, string $name, array $roles = ['ROLE_USER']): int
+    public function create(string $email, string $passwordHash, string $name, string $role): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO users (email, password_hash, name, roles_json) 
+            'INSERT INTO user (email, password_hash, name, roles_json) 
              VALUES (?, ?, ?, ?)'
         );
         $stmt->execute([
             $email,
             $passwordHash,
             $name,
-            json_encode($roles, JSON_UNESCAPED_UNICODE)
+            $role
         ]);
 
         return (int) $this->pdo->lastInsertId();
