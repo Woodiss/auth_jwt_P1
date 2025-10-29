@@ -30,16 +30,16 @@ final class UserRepository
         return $row ?: null;
     }
 
-    public function create(string $email, string $passwordHash, string $name, string $role): int
+    public function create(string $frirstname, string $lastname, string $email, string $password, string $role): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO user (email, password_hash, name, roles_json) 
-             VALUES (?, ?, ?, ?)'
+            'INSERT INTO `user`(`firstname`, `lastname`, `email`, `password`, `role`) VALUES (?, ?, ?, ?, ?)'
         );
         $stmt->execute([
+            $frirstname,
+            $lastname,
             $email,
-            $passwordHash,
-            $name,
+            $password,
             $role
         ]);
 
