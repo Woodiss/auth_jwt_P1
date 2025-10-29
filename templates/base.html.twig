@@ -17,15 +17,15 @@
 
     {# Le menu de navigation (contrainte de l'exercice) #}
     <nav>
-        <a href="home">Accueil</a>
-        <a href="spectacles">Spectacles</a>
+        <a href="{{ basePath }}/home">Accueil</a>
+        <a href="{{ basePath }}/spectacles">Spectacles</a>
         
         {# Affiche "Profil" ou "Login" selon la connexion #}
         {% if user %}
-            <a href="profil">Mon Profil</a>
-            <a href="logout">Déconnexion</a>
+            <a href="{{ basePath }}/profil">Mon Profil</a>
+            <a href="{{ basePath }}/logout">Déconnexion</a>
         {% else %}
-            <a href="login">Connexion</a>
+            <a href="{{ basePath }}/login">Connexion</a>
         {% endif %}
     </nav>
 
