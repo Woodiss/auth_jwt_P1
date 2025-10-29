@@ -39,7 +39,7 @@ final class SpectacleRepository
     public function find(int $id): ?array
     {
         $sql = 'SELECT *
-                FROM spectacles
+                FROM spectacle
                 WHERE id = ?';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$id]);
@@ -55,15 +55,9 @@ final class SpectacleRepository
         $limit  = max(0, (int)$limit);
         $offset = max(0, (int)$offset);
 
-        $sql = 'SELECT *
-                FROM spectacles
-                ORDER BY date_spectacle ASC
-                LIMIT :limit OFFSET :offset';
+        $sql = 'SELECT * FROM spectacle';
 
         $stmt = $this->pdo->prepare($sql);
-        // bindValue nécessaire pour LIMIT/OFFSET
-        $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll();

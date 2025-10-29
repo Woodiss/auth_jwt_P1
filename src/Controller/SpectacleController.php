@@ -44,10 +44,6 @@ class SpectacleController
   public function list(): void
   {
     // Données "mock" (en attendant une BDD)
-    $spectacles = [
-      ['id' => 1, 'title' => 'Le Roi Lion'],
-      ['id' => 2, 'title' => 'Mamma Mia!']
-    ];
 
     $repoSpectacle = new SpectacleRepository();
     $spectacles = $repoSpectacle->findAll();
@@ -59,13 +55,9 @@ class SpectacleController
   public function show(int $id)
   {
     /* $spectacle = $this->getSpectacleById($id); */
-    $spectacle = [
-      "id" => 1,
-      "title" => "NomDuSpectacle",
-      "description" => "description du spectacle",
-      "director" => "Lorem Ipsum"
-    ];
-
+    $repoSpectacle = new SpectacleRepository();
+    $spectacle = $repoSpectacle->find($id);
+    
     if (!$spectacle) {
       http_response_code(404);
       echo $this->twig->render('404.html.twig', [

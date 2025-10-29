@@ -9,28 +9,31 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     >
-    <style>
-        nav { background: #333; color: white; padding: 1rem; }
-        nav a { color: white; padding: 0.5rem; text-decoration: none; }
-        nav a:hover { background: #555; }
-    </style>
 </head>
 <body>
 
-    {# Le menu de navigation (contrainte de l'exercice) #}
-    <nav>
-        <a href="{{ basePath }}/home">Accueil</a>
-        <a href="{{ basePath }}/spectacles">Spectacles</a>
-        
-        {# Affiche "Profil" ou "Login" selon la connexion #}
-        {% if user %}
-            <a href="{{ basePath }}/profil">Mon Profil</a>
-            <a href="{{ basePath }}/logout">Déconnexion</a>
-        {% else %}
-            <a href="{{ basePath }}/login">Connexion</a>
-        {% endif %}
+    <nav style="padding: 1rem 2rem;">
+        <ul>
+            <li><strong>SpecTax</strong></li>
+        </ul>
+        <ul>
+            <li><a href="{{ basePath }}/spectacles" class="contrast">Spectacles</a></li>
+            <li><a href="{{ basePath }}/home" class="contrast">Accueil</a></li>
+            {% if user %}
+                <details class="dropdown">
+                    <summary>
+                    Compte
+                    </summary>
+                    <ul dir="rtl">
+                        <li><a href="{{ basePath }}/profil" class="contrast">Mon Profil</a></li>
+                        <li><a href="{{ basePath }}/logout" class="contrast">Déconnexion</a></li>
+                    </ul>
+                </details>
+            {% else %}
+                <li><a href="{{ basePath }}/login" class="contrast">Connexion</a></li>
+            {% endif %}
+        </ul>
     </nav>
-
     <main class="container">
         {# C'est ici que le contenu des autres pages sera injecté #}
         {% block content %}{% endblock %}

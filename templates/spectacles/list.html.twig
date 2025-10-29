@@ -17,10 +17,11 @@
             {{spectacle.description}}
           </p>
           <footer>
-            <button><a href="{{ basePath }}/spectacles/{{spectacle.id}}">Plus d'info</button>
+            <a role="button" href="{{ basePath }}/spectacles/{{ spectacle.id }}">
+              Plus d'info
+            </a>
           </footer>
         </article>
-        {# <a href="{{ basePath }}/spectacles/{{spectacle.id}}"><li>{{spectacle.title}}</li></a> #}
       {% endfor %}
     {# </ul> #}
 {% endblock %}
