@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion — {{ parent() }}{% endblock %}
+
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Connexion</h1>
+
+<form method="post" action="/login" class="bg-white border rounded p-4">
+  {% if errors is defined and errors|length %}
+    <div class="mb-3 text-sm text-red-700">
+      {{ errors|join('<br>')|raw }}
+    </div>
+  {% endif %}
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium mb-1" for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="email"
+           value="{{ (old.email ?? '')|e }}"
+           class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium mb-1" for="password">Mot de passe</label>
+    <input id="password" name="password" type="password" required autocomplete="current-password"
+           class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+  </div>
+
+  <button class="mt-2 inline-flex items-center justify-center rounded bg-black px-4 py-2 text-white text-sm">
+    Se connecter
+  </button>
+</form>
+{% endblock %}

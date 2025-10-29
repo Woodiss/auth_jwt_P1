@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription — {{ parent() }}{% endblock %}
+
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Créer un compte</h1>
+
+<form method="post" action="/register" class="bg-white border rounded p-4">
+  {% if errors is defined and errors|length %}
+    <div class="mb-3 text-sm text-red-700">
+      {{ errors|join('<br>')|raw }}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1" for="firstname">Prénom</label>
+      <input id="firstname" name="firstname" type="text" required autocomplete="given-name"
+             value="{{ (old.firstname ?? '')|e }}"
+             class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1" for="lastname">Nom</label>
+      <input id="lastname" name="lastname" type="text" required autocomplete="family-name"
+             value="{{ (old.lastname ?? '')|e }}"
+             class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+    </div>
+  </div>
+
+  <div class="mt-4 mb-4">
+    <label class="block text-sm font-medium mb-1" for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="email"
+           value="{{ (old.email ?? '')|e }}"
+           class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-sm font-medium mb-1" for="password">Mot de passe (min 8)</label>
+    <input id="password" name="password" type="password" required autocomplete="new-password"
+           class="w-full rounded border px-3 py-2 text-sm border-gray-300">
+  </div>
+
+  <button class="mt-2 inline-flex items-center justify-center rounded bg-black px-4 py-2 text-white text-sm">
+    Créer le compte
+  </button>
+</form>
+{% endblock %}
