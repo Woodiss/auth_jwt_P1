@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Security\Authenticated;
+use App\Repository\ReservationRepository;
 
 class UserController
 {
@@ -13,25 +14,26 @@ class UserController
     $this->twig = $twig;
   }
 
-  #[Authenticated]
+  // #[Authenticated]
   public function profile()
   {
     $user = [
       "id" => 1,
       "firstname" => "Jhon",
+      "lastname" => "Doe"
+    ];
+
+    $reservation = (new ReservationRepository())->findByUserId($user['id']);
+    $user = [
+      "id" => 1,
+      "firstname" => "Jhon",
       "lastname" => "Doe",
-      "reservations" => [
-        1 => [
-          "title" => "spectacle 1"
-        ],
-        2 => [
-          "title" => "spectacle 2"
-        ]
-      ]
+      "reservation" => $reservation
     ];
     // Ici, on pourrait récupérer des infos supplémentaires de la DB
     echo $this->twig->render('profile.html.twig', [
       'user' => $user, // injecté via middleware si nécessaire
+      'reservation' => $reservation,
     ]);
   }
 }
