@@ -2,7 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Spectacle;
 use Twig\Environment; // On aura besoin de Twig
+use App\Form\SpectacleType;
+
 
 class SpectacleController
 {
@@ -48,4 +51,41 @@ class SpectacleController
       'spectacles' => $spectacles
     ]);
   }
+
+  public function new(): void
+    {
+        $fields = SpectacleType::getFields();
+
+        $data = [
+            'title' => $_POST['title'] ?? '',
+            'description' => $_POST['description'] ?? '',
+            'director' => $_POST['director'] ?? '',
+        ];
+
+        $errors = [];
+        $success = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (trim($data['title']) === '') {
+                $errors['title'] = 'Le titre est obligatoire.';
+            }
+            if (trim($data['director']) === '') {
+                $errors['director'] = 'Le metteur en scène est obligatoire.';
+            }
+
+            if (empty($errors)) {
+                // Simulation d'enregistrement OK
+                $success = true;
+                $data = ['title' => '', 'description' => '', 'director' => ''];
+            }
+        }
+
+        echo $this->twig->render('spectacles/new.html.twig', [
+            'fields' => $fields,
+            'data' => $data,
+            'errors' => $errors,
+            'success' => $success,
+        ]);
+    }
+
 }
