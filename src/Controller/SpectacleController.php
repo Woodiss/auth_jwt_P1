@@ -10,31 +10,46 @@ use App\Entity\Reservation;
 use App\Repository\ReservationRepository;
 
 use App\Security\Authenticated;
+use App\Security\AuthMiddleware;
 
 class SpectacleController
 {
   // On "injecte" Twig pour que le contrôleur puisse l'utiliser
   private Environment $twig;
 
-  public function __construct(Environment $twig)
+  private AuthMiddleware $auth;
+
+  public function __construct(\Twig\Environment $twig, AuthMiddleware $auth)
   {
     $this->twig = $twig;
+    $this->auth = $auth;
   }
 
+  private function getUser(): ?array
+  {
+    $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
+    if (!$payload) return null;
+
+    $userData = $this->auth->requireAuth([]);
+    if (!$userData) return null;
+
+    return [
+      'id'        => $userData['id'],
+      'firstname' => $userData['firstname'],
+      'lastname'  => $userData['lastname'],
+      'email'     => $userData['email'],
+      'role'      => $userData['role'],
+      'fullname'  => $userData['fullname'],
+    ];
+  }
   /**
    * Méthode pour la page d'accueil
    */
+
   public function home(): void
   {
-    // ... (logique pour savoir si l'utilisateur est connecté, etc.)
+    $user = $this->getUser();
 
-    $user = [
-      "id" => 1,
-      "firstname" => "Jhon",
-      "lastname" => "Doe"
-    ]; // À remplacer par le vrai nom si connecté
-
-    // Le contrôleur fait son travail : il rend un template
     echo $this->twig->render('index.html.twig', [
       'user' => $user
     ]);
@@ -50,16 +65,19 @@ class SpectacleController
     $repoSpectacle = new SpectacleRepository();
     $spectacles = $repoSpectacle->findAll();
 
+    $user = $this->getUser();
     echo $this->twig->render('spectacles/list.html.twig', [
-      'spectacles' => $spectacles
+      'spectacles' => $spectacles,
+      'user' => $user
     ]);
   }
   public function show(int $id)
   {
+    $user = $this->getUser();
     /* $spectacle = $this->getSpectacleById($id); */
     $repoSpectacle = new SpectacleRepository();
     $spectacle = $repoSpectacle->find($id);
-    
+
     if (!$spectacle) {
       http_response_code(404);
       echo $this->twig->render('error.html.twig', [
@@ -70,12 +88,14 @@ class SpectacleController
     }
 
     echo $this->twig->render('spectacles/show.html.twig', [
-      'spectacle' => $spectacle
+      'spectacle' => $spectacle,
+      'user' => $user
     ]);
   }
   // #[Authenticated(roles: ['admin'])]
   public function new(): void
   {
+    $user = $this->getUser();
     $fields = SpectacleType::getFields();
 
     $data = [
@@ -116,6 +136,7 @@ class SpectacleController
       'data'    => $data,
       'errors'  => $errors,
       'success' => $success,
+      'user' => $user
     ]);
   }
 
