@@ -51,9 +51,23 @@ $routes = [
   '/refresh' => fn() => print("Route de refresh token"),
 ];
 
-// 9. Exécuter la route ou afficher 404
+// 8. Exécuter la route
 if (isset($routes[$route])) {
-  $routes[$route]();
+  $controller = $routes[$route][0];
+  $method = $routes[$route][1] ?? null;
+
+  if ($method) {
+    // Vérifie si c'est la route profile et applique le middleware
+    if ($route === '/profile') {
+      $user = $authMiddleware->requireAuth(); // vérifie le JWT
+      // Si nécessaire, tu peux passer $user au contrôleur
+    }
+
+    $controller->$method();
+  } else {
+    // pour les closures
+    $routes[$route]();
+  }
 } else {
   http_response_code(404);
   echo $twig->render('404.html.twig');
