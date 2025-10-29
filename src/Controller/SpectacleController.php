@@ -22,30 +22,30 @@ class SpectacleController
     $this->auth = $auth;
   }
 
+  private function getUser(): ?array
+  {
+    $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
+    if (!$payload) return null;
+
+    $userData = $this->auth->requireAuth([]);
+    if (!$userData) return null;
+
+    return [
+      'id'        => $userData['id'],
+      'firstname' => $userData['firstname'],
+      'lastname'  => $userData['lastname'],
+      'email'     => $userData['email'],
+      'role'      => $userData['role'],
+      'fullname'  => $userData['name'],
+    ];
+  }
   /**
    * Méthode pour la page d'accueil
    */
 
   public function home(): void
   {
-    $user = null;
-
-    // Essaie de récupérer l'utilisateur connecté sans bloquer si non connecté
-    $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
-    if ($payload) {
-      $userData = $this->auth->requireAuth([]); // [] = pas de restriction de rôle
-      var_dump($userData);
-      if ($userData) {
-        $user = [
-          'id'       => $userData['id'],
-          'firstname'       => $userData['firstname'],
-          'lastname'       => $userData['lastname'],
-          'email'    => $userData['email'],
-          'role'     => $userData['role'],
-          'fullname' => $userData['name'],
-        ];
-      }
-    }
+    $user = $this->getUser();
 
     echo $this->twig->render('index.html.twig', [
       'user' => $user
@@ -62,12 +62,15 @@ class SpectacleController
     $repoSpectacle = new SpectacleRepository();
     $spectacles = $repoSpectacle->findAll();
 
+    $user = $this->getUser();
     echo $this->twig->render('spectacles/list.html.twig', [
-      'spectacles' => $spectacles
+      'spectacles' => $spectacles,
+      'user' => $user
     ]);
   }
   public function show(int $id)
   {
+    $user = $this->getUser();
     /* $spectacle = $this->getSpectacleById($id); */
     $repoSpectacle = new SpectacleRepository();
     $spectacle = $repoSpectacle->find($id);
@@ -82,7 +85,8 @@ class SpectacleController
     }
 
     echo $this->twig->render('spectacles/show.html.twig', [
-      'spectacle' => $spectacle
+      'spectacle' => $spectacle,
+      'user' => $user
     ]);
   }
   #[Authenticated(roles: ['admin'])]

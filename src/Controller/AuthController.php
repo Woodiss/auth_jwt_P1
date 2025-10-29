@@ -147,7 +147,7 @@ final class AuthController
 
   private function unsetJwtCookie(): void
   {
-    setcookie('jwt', '', [
+    setcookie('jwt_Auth_P1', '', [
       'expires'  => time() - 3600,
       'path'     => '/',
       'secure'   => !empty($_SERVER['HTTPS']),
