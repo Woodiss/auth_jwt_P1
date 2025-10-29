@@ -1,0 +1,17 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+
+    <h1>Bienvenue</h1> {# 'message' vient du contrôleur #}
+
+
+    {# C'est une contrainte : afficher le nom si l'utilisateur est identifié #}
+    {% if user %}
+        <p>Heureux de vous revoir, <strong>"{{ user.firstname }} {{user.lastname}}"</strong> !</p>
+    {% else %}
+        <p>Veuillez vous <a href="/login">connecter</a> pour réserver.</p>
+    {% endif %}
+
+{% endblock %}

@@ -46,7 +46,7 @@ $spectacleController = new SpectacleController($twig);
 $routes = [
   '/home' => fn() => $spectacleController->home(),
   '/spectacles' => fn() => $spectacleController->list(),
-  '/spectacles' => fn() => $spectacleController->new(),
+  '/spectacles/new' => fn() => $spectacleController->new(),
   '/login' => fn() => print("Page de login"),
   '/refresh' => fn() => print("Route de refresh token"),
 ];

@@ -1,98 +1,40 @@
-{% extends 'base.html.twig' %}
+{% extends "base.html.twig" %}
+{% block title %}Nouveau spectacle{% endblock %}
 
-{% block title %}Nouveau Spectacle{% endblock %}
-
-{% block body %}
-<div class="container" style="max-width: 760px; margin: 2rem auto;">
+{% block content %}
   <h1>Nouveau spectacle</h1>
 
-  {# Message de succès #}
-  {% if success is defined and success %}
-    <div style="padding: .75rem 1rem; border: 1px solid #28a745; background: #e6ffed; color: #155724; border-radius: .5rem; margin-bottom: 1rem;">
-      Le spectacle a été enregistré avec succès (simulation).
-    </div>
-  {% endif %}
+    {% if success is defined and success %}
+      <p>Le spectacle a été enregistré avec succès (simulation).</p>
+    {% endif %}
 
-  {# Récapitulatif simple d'erreurs #}
-  {% if errors is defined and errors|length > 0 %}
-    <div style="padding: .75rem 1rem; border: 1px solid #dc3545; background: #ffe6e9; color: #721c24; border-radius: .5rem; margin-bottom: 1rem;">
-      <strong>Veuillez corriger les erreurs suivantes :</strong>
-      <ul style="margin: .5rem 0 0 1.25rem;">
+    {% if errors is defined and errors|length > 0 %}
+      <ul>
         {% for f, msg in errors %}
-          <li><code>{{ f }}</code>&nbsp;: {{ msg }}</li>
+          <li>{{ f }} : {{ msg }}</li>
         {% endfor %}
       </ul>
-    </div>
-  {% endif %}
+    {% endif %}
 
-  <form method="post">
-    <div style="display: grid; gap: 1rem;">
+    <form method="post">
       <div>
         <label for="title">Titre</label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          value="{{ data.title|default('')|e }}"
-          style="width:100%; padding:.5rem .75rem; border:1px solid {{ (errors.title is defined) ? '#dc3545' : '#ced4da' }}; border-radius:.375rem;"
-          placeholder="Ex. : Roméo et Juliette"
-          autocomplete="off"
-          required
-        >
-        {% if errors.title is defined %}
-          <div style="color:#dc3545; font-size:.9rem; margin-top:.25rem;">{{ errors.title }}</div>
-        {% endif %}
+        <input id="title" name="title" type="text" value="{{ data.title|default('')|e }}">
+        {% if errors.title is defined %}<div>{{ errors.title }}</div>{% endif %}
       </div>
 
       <div>
         <label for="description">Description</label>
-        <textarea
-          id="description"
-          name="description"
-          rows="5"
-          style="width:100%; padding:.5rem .75rem; border:1px solid {{ (errors.description is defined) ? '#dc3545' : '#ced4da' }}; border-radius:.375rem;"
-          placeholder="Résumé, distribution, etc."
-        >{{ data.description|default('')|e }}</textarea>
-        {% if errors.description is defined %}
-          <div style="color:#dc3545; font-size:.9rem; margin-top:.25rem;">{{ errors.description }}</div>
-        {% endif %}
+        <textarea id="description" name="description" rows="5">{{ data.description|default('')|e }}</textarea>
+        {% if errors.description is defined %}<div>{{ errors.description }}</div>{% endif %}
       </div>
 
       <div>
         <label for="director">Metteur en scène</label>
-        <input
-          id="director"
-          name="director"
-          type="text"
-          value="{{ data.director|default('')|e }}"
-          style="width:100%; padding:.5rem .75rem; border:1px solid {{ (errors.director is defined) ? '#dc3545' : '#ced4da' }}; border-radius:.375rem;"
-          placeholder="Ex. : Ariane Mnouchkine"
-          autocomplete="off"
-          required
-        >
-        {% if errors.director is defined %}
-          <div style="color:#dc3545; font-size:.9rem; margin-top:.25rem;">{{ errors.director }}</div>
-        {% endif %}
+        <input id="director" name="director" type="text" value="{{ data.director|default('')|e }}">
+        {% if errors.director is defined %}<div>{{ errors.director }}</div>{% endif %}
       </div>
 
-      <div style="display:flex; gap:.5rem;">
-        <button type="submit" style="padding:.6rem 1rem; border:1px solid #0d6efd; background:#0d6efd; color:white; border-radius:.375rem; cursor:pointer;">
-          Enregistrer (simulation)
-        </button>
-        <a href="{{ path('app_spectacles_index')|default('#') }}" style="padding:.6rem 1rem; border:1px solid #6c757d; background:#6c757d; color:white; border-radius:.375rem; text-decoration:none;">
-          Annuler
-        </a>
-      </div>
-    </div>
-  </form>
-
-  {# Aperçu debug optionnel #}
-  {% if app.request.query.get('debug') %}
-    <hr>
-    <h2 style="font-size:1.1rem;">Debug</h2>
-    <pre>data = {{ dump(data) }}</pre>
-    <pre>errors = {{ dump(errors) }}</pre>
-    <pre>success = {{ dump(success) }}</pre>
-  {% endif %}
-</div>
+      <button type="submit">Enregistrer</button>
+    </form>
 {% endblock %}
