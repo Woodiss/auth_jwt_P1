@@ -1,0 +1,22 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Spectacle {{spectacle.title}}{% endblock %}
+
+{% block content %}
+
+    <h1>{{spectacle.title}}</h1> {# 'message' vient du contrôleur #}
+    
+    <ul>
+    <li>Titre : {{spectacle.title}}</li>
+    <li>Description: {{spectacle.description}}</li>
+    <li>Scénariste : {{spectacle.director}}</li>
+    </ul>
+    {% if user %}
+     <form method="post">
+      <button>Réserver</button>
+     </form> 
+    {% else %}
+      <p>Connecter pour réserver</p>
+    {% endif %}
+
+{% endblock %}

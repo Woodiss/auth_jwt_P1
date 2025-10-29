@@ -11,19 +11,33 @@ class AuthMiddleware
     $this->jwt = $jwt;
   }
 
-  public function requireAuth(): ?array
+  public function requireAuth(array $requiredRoles = []): array
   {
-    if (!isset($_COOKIE['jwt'])) {
+    $headers = apache_request_headers();
+    $authHeader = $headers['Authorization'] ?? '';
+
+    if (!str_starts_with($authHeader, 'Bearer ')) {
       http_response_code(401);
-      exit('Non autorisé');
+      exit('Token manquant');
     }
 
-    $user = $this->jwt->verify($_COOKIE['jwt']);
-    if (!$user) {
+    $token = substr($authHeader, 7);
+    $payload = $this->jwt->verify($token);
+
+    if (!$payload) {
       http_response_code(401);
       exit('Token invalide ou expiré');
     }
 
-    return $user;
+    // Vérifie les rôles si nécessaires
+    if (!empty($requiredRoles)) {
+      $userRole = $payload['role'] ?? 'user';
+      if (!in_array($userRole, $requiredRoles)) {
+        http_response_code(403);
+        exit('Accès refusé : rôle insuffisant');
+      }
+    }
+
+    return $payload;
   }
 }

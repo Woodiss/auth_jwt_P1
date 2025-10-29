@@ -2,8 +2,13 @@
 
 namespace App\Security;
 
-#[\Attribute]
+#[\Attribute(\Attribute::TARGET_METHOD)]
 class Authenticated
 {
-  public function __construct(public array $roles = []) {}
+  public array $roles;
+
+  public function __construct(array $roles = [])
+  {
+    $this->roles = $roles;
+  }
 }

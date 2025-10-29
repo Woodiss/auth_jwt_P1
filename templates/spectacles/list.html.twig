@@ -1,0 +1,15 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Spectacles{% endblock %}
+
+{% block content %}
+
+    <h1>Spectacles</h1> {# 'message' vient du contrôleur #}
+    
+
+    <ul>
+      {% for spectacle in spectacles%}
+        <a href="{{ basePath }}/spectacles/{{spectacle.id}}"><li>{{spectacle.title}}</li></a>
+      {% endfor %}
+    </ul>
+{% endblock %}
