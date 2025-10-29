@@ -1,40 +1,27 @@
 {% extends "base.html.twig" %}
-{% block title %}Nouveau spectacle{% endblock %}
+{% block title 'Nouveau spectacle' %}
 
 {% block content %}
   <h1>Nouveau spectacle</h1>
 
-    {% if success is defined and success %}
-      <p>Le spectacle a été enregistré avec succès.</p>
-    {% endif %}
+  {% if success|default(false) %}
+    <p>Le spectacle a été enregistré avec succès.</p>
+  {% endif %}
 
-    {% if errors is defined and errors|length > 0 %}
-      <ul>
-        {% for f, msg in errors %}
-          <li>{{ f }} : {{ msg }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
-    <form method="post">
+  <form method="post">
+    {% for name, field in fields %}
       <div>
-        <label for="title">Titre</label>
-        <input id="title" name="title" type="text" value="{{ data.title|default('')|e }}">
-        {% if errors.title is defined %}<div>{{ errors.title }}</div>{% endif %}
+        <label for="{{ name }}">{{ field.label }}</label>
+        {% if field.type == 'textarea' %}
+          <textarea id="{{ name }}" name="{{ name }}" rows="5" placeholder="{{ field.placeholder|default('') }}">{{ data[name]|default('')|e }}</textarea>
+        {% else %}
+          <input id="{{ name }}" name="{{ name }}" type="{{ field.type }}" value="{{ data[name]|default('')|e }}" placeholder="{{ field.placeholder|default('') }}">
+        {% endif %}
+        {% if errors[name] is defined %}
+          <div>{{ errors[name] }}</div>
+        {% endif %}
       </div>
-
-      <div>
-        <label for="description">Description</label>
-        <textarea id="description" name="description" rows="5">{{ data.description|default('')|e }}</textarea>
-        {% if errors.description is defined %}<div>{{ errors.description }}</div>{% endif %}
-      </div>
-
-      <div>
-        <label for="director">Metteur en scène</label>
-        <input id="director" name="director" type="text" value="{{ data.director|default('')|e }}">
-        {% if errors.director is defined %}<div>{{ errors.director }}</div>{% endif %}
-      </div>
-
-      <button type="submit">Enregistrer</button>
-    </form>
+    {% endfor %}
+    <button type="submit">Enregistrer</button>
+  </form>
 {% endblock %}

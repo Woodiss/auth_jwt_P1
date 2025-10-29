@@ -10,25 +10,24 @@ class SpectacleType
     {
         return [
             'title' => [
-                'label' => 'Titre',
+                'label' => 'Titre*',
+                'placeholder' => 'Titre du spectacle',
                 'type' => 'text',
                 'required' => true,
-                'maxlength' => 150,
-                'placeholder' => 'Entrez le titre du spectacle',
             ],
+
             'description' => [
                 'label' => 'Description',
+                'placeholder' => 'Description du spectacle',
                 'type' => 'textarea',
                 'required' => false,
-                'maxlength' => 1000,
-                'placeholder' => 'Brève description du spectacle (facultatif)',
             ],
+            
             'director' => [
-                'label' => 'Metteur en scène',
+                'label' => 'Metteur en scène*',
+                'placeholder' => 'Nom du metteur en scène',
                 'type' => 'text',
                 'required' => true,
-                'maxlength' => 100,
-                'placeholder' => 'Nom du metteur en scène',
             ],
         ];
     }
