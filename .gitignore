@@ -1,0 +1,38 @@
+# --- PHP / Composer ---
+/vendor/
+composer.phar
+
+# Ne JAMAIS versionner les secrets
+/var/data/jwt_secret.key
+
+# Tokens et données runtime
+/var/data/refresh_tokens.json
+/var/data/tickets.json
+
+# (Optionnel) si tu veux garder des jeux de données d’exemple :
+# => commente ces lignes ci-dessus, et ajoute plutôt:
+# !/var/data/spectacles.json
+# !/var/data/users.json
+
+# Logs / caches éventuels
+/storage/
+cache/
+logs/
+*.log
+
+# Environnements
+.env
+.env.*.local
+
+# Système / IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.code-workspace
+
+# Divers
+*.bak
+*.tmp
+.DS_Store
