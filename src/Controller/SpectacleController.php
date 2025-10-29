@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Spectacle;
 use Twig\Environment; // On aura besoin de Twig
 use App\Form\SpectacleType;
+use App\Repository\SpectacleRepository;
 
+use App\Security\Authenticated;
 
 class SpectacleController
 {
@@ -43,47 +45,79 @@ class SpectacleController
   {
     // Données "mock" (en attendant une BDD)
     $spectacles = [
-      ['id' => 1, 'nom' => 'Le Roi Lion'],
-      ['id' => 2, 'nom' => 'Mamma Mia!']
+      ['id' => 1, 'title' => 'Le Roi Lion'],
+      ['id' => 2, 'title' => 'Mamma Mia!']
     ];
 
     echo $this->twig->render('spectacles/list.html.twig', [
       'spectacles' => $spectacles
     ]);
   }
-
-  public function new(): void
+  public function show(int $id)
   {
-    $fields = SpectacleType::getFields();
-
-    $data = [
-        'title' => $_POST['title'] ?? '',
-        'description' => $_POST['description'] ?? '',
-        'director' => $_POST['director'] ?? '',
+    /* $spectacle = $this->getSpectacleById($id); */
+    $spectacle = [
+      "id" => 1,
+      "title" => "NomDuSpectacle",
+      "description" => "description du spectacle",
+      "director" => "Lorem Ipsum"
     ];
 
-    $errors = [];
-    $success = false;
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (trim($data['title']) === '') {
-            $errors['title'] = 'Le titre est obligatoire.';
-        }
-        if (trim($data['director']) === '') {
-            $errors['director'] = 'Le metteur en scène est obligatoire.';
-        }
-
-        if (empty($errors)) {
-            $success = true;
-        }
+    if (!$spectacle) {
+      http_response_code(404);
+      echo $this->twig->render('404.html.twig', [
+        'message' => "Spectacle introuvable."
+      ]);
+      return;
     }
 
-    echo $this->twig->render('spectacles/new.html.twig', [
-        'fields' => $fields,
-        'data' => $data,
-        'errors' => $errors,
-        'success' => $success,
+    echo $this->twig->render('spectacles/show.html.twig', [
+      'spectacle' => $spectacle
     ]);
   }
+  #[Authenticated(roles: ['admin'])]
+  public function new(): void
+  {
+      $fields = SpectacleType::getFields();
 
+      $data = [
+          'title' => $_POST['title'] ?? '',
+          'description' => $_POST['description'] ?? '',
+          'director' => $_POST['director'] ?? '',
+      ];
+
+      $errors = [];
+      $success = false;
+
+      if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+          $data = array_map('trim', $data);
+          if ($data['title'] === '')    $errors['title'] = 'Le titre est obligatoire.';
+          if ($data['director'] === '') $errors['director'] = 'Le metteur en scène est obligatoire.';
+
+          if (!$errors) {
+              $spectacle = new Spectacle(
+                  title: $data['title'],
+                  description: $data['description'] ?: null,
+                  director: $data['director']
+              );
+
+              try {
+                  (new SpectacleRepository())->create($spectacle);
+                  // PRG (recommandé) :
+                  // header('Location: /spectacles/new?success=1'); exit;
+                  $success = true;
+                  $data = ['title' => '', 'description' => '', 'director' => ''];
+              } catch (\Throwable $e) {
+                  $errors['global'] = "Erreur lors de l'enregistrement.";
+              }
+          }
+      }
+
+      echo $this->twig->render('spectacles/new.html.twig', [
+          'fields'  => $fields,
+          'data'    => $data,
+          'errors'  => $errors,
+          'success' => $success,
+      ]);
+  }
 }

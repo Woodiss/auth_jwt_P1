@@ -12,6 +12,14 @@ class Spectacle
     
     private ?string $director = null;
 
+    public function __construct(?int $id = null, ?string $title = null, ?string $description = null, ?string $director = null)
+    {
+        $this->id = $id;
+        $this->title = $title;
+        $this->description = $description;
+        $this->director = $director;
+    }
+
     public function getId(): ?int { 
         return $this->id; 
     }

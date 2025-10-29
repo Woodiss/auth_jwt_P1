@@ -2,6 +2,7 @@
 namespace App\Repository;
 
 use App\Database\Connexion;
+use App\Entity\User;
 use PDO;
 
 final class UserRepository
@@ -30,17 +31,17 @@ final class UserRepository
         return $row ?: null;
     }
 
-    public function create(string $frirstname, string $lastname, string $email, string $password, string $role): int
+    public function create(User $user): int
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO `user`(`firstname`, `lastname`, `email`, `password`, `role`) VALUES (?, ?, ?, ?, ?)'
         );
         $stmt->execute([
-            $frirstname,
-            $lastname,
-            $email,
-            $password,
-            $role
+            $user->getFirstname(),
+            $user->getLastname(),
+            $user->getEmail(),
+            $user->getPassword(),
+            $user->getRole()
         ]);
 
         return (int) $this->pdo->lastInsertId();
