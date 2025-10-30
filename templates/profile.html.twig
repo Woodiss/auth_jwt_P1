@@ -1,16 +1,23 @@
 {% extends "base.html.twig" %}
 
-{% block title %}Profil{% endblock %}
+{% block title %}Profil
+{% endblock %}
 
 {% block content %}
+	<h2>Vos réservations</h2>
 
-    <h1>{{user.firstname}} {{user.lastname}}</h1> {# 'message' vient du contrôleur #}
-    
-    <h2>Vos réservations</h2>
+	{% if reservation is not empty %}
+		<ul>
+			{% for reservation in reservation %}
+				<li>
+					<strong>{{ reservation.title }}</strong><br>
+					{{ reservation.description }}<br>
+					Réservé pour le : {{ reservation.date|date('d/m/Y') }}
+				</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>Vous n'avez aucune réservation.</p>
+	{% endif %}
 
-    <ul>
-      {% for reservation in user.reservations %}
-       <li>{{reservation.title}}</li> 
-      {% endfor %}
-    </ul>
 {% endblock %}
