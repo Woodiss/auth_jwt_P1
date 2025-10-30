@@ -79,7 +79,6 @@ final class AuthController
           }
         } catch (\Throwable $e) {
           $errors['global'] = "Erreur lors de la connexion.";
-          var_dump($e);
         }
       }
     }

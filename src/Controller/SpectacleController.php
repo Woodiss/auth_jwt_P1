@@ -184,7 +184,7 @@ class SpectacleController
 
     try {
         (new ReservationRepository())->create($reservation);
-        header('Location: ./../home', true, 303);
+        header('Location: ./../spectacles', true, 303);
         exit;
     } catch (\Throwable $e) {
         echo "Erreur lors de la réservation.";

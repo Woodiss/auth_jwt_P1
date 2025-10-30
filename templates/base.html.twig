@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mon Site de Spectacles{% endblock %}</title>
-    {# Vous pouvez ajouter vos liens CSS ici #}
     <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
@@ -14,24 +13,25 @@
 
     <nav style="padding: 1rem 2rem;">
         <ul>
-            <li><strong>SpecTax</strong></li>
+            <li><strong><a href="{{ basePath }}/home" class="contrast">SpecTax</a></strong></li>
         </ul>
         <ul>
             <li><a href="{{ basePath }}/spectacles" class="contrast">Spectacles</a></li>
             <li><a href="{{ basePath }}/home" class="contrast">Accueil</a></li>
-            {% if user %}
-                <details class="dropdown">
-                    <summary>
+            <details class="dropdown">
+                <summary>
                     Compte
-                    </summary>
-                    <ul dir="rtl">
-                        <li><a href="{{ basePath }}/profile" class="contrast">Mon Profil</a></li>
+                </summary>
+                <ul dir="rtl">
+                    {% if user %}
+                        <li><a href="{{ basePath }}/profile" class="contrast">Mon Profil / Réservation</a></li>
                         <li><a href="{{ basePath }}/logout" class="contrast">Déconnexion</a></li>
-                    </ul>
-                </details>
-            {% else %}
-                <li><a href="{{ basePath }}/login" class="contrast">Connexion</a></li>
-            {% endif %}
+                    {% else %}
+                        <li><a href="{{ basePath }}/login" class="contrast">Connexion</a></li>
+                        <li><a href="{{ basePath }}/register" class="contrast">Inscription</a></li>
+                    {% endif %}
+                </ul>
+            </details>
         </ul>
     </nav>
     <main class="container">

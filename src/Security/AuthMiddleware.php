@@ -11,9 +11,6 @@ class AuthMiddleware
     $this->jwt = $jwt;
   }
 
-
-
-
   public function requireAuth(array $requiredRoles = []): ?array
   {
     // 1️⃣ Récupère le token d'accès
@@ -37,10 +34,8 @@ class AuthMiddleware
     // 3️⃣ Si token absent ou expiré, tente un refresh automatique
     if (!$payload && isset($_COOKIE['jwt_Refresh_P1'])) {
       $refreshToken = $_COOKIE['jwt_Refresh_P1'];
-      var_dump($_COOKIE['jwt_Refresh_P1']);
       $repo = new \App\Repository\UserRepository();
       $user = $repo->findByRefreshToken($refreshToken);
-      var_dump($user);
       if ($user && $user->getRefreshTokenExpiresAt() !== null && $user->getRefreshTokenExpiresAt() > date('Y-m-d H:i:s')) {
         // Génère un nouveau access token
         $newAccessToken = $this->jwt->generate([

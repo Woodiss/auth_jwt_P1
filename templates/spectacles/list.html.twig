@@ -5,6 +5,11 @@
 {% block content %}
 
     <h1>Spectacles</h1> {# 'message' vient du contrôleur #}
+    {% if user['role'] == 'admin' %}
+      <a role="button" href="{{ basePath }}/spectacles/new">
+        Ajouter un spectacle
+      </a>
+    {% endif %}
     
 
     {# <ul> #}
