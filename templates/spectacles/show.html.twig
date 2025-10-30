@@ -11,7 +11,7 @@
 		<li>Description:{{spectacle.description}}</li>
 		<li>Scénariste :{{spectacle.director}}</li>
 	</ul>
-	{# {% if user %} #}
+	{% if user %}
 		<form method="post" action="{{ basePath }}/spectacles/reservation">
 			<input type="hidden" name="spectacle_id" value="{{ spectacle.id }}">
 			<div>
@@ -23,8 +23,8 @@
 			</div>
 			<button type="submit">Réserver</button>
 		</form>
-	{# {% else %} #}
+	{% else %}
 		<p>Connectez-vous pour réserver</p>
-	{# {% endif %} #}
+	{% endif %}
 
 {% endblock %}

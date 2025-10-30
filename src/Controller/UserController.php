@@ -23,7 +23,6 @@ class UserController
 
     $userData = $this->auth->requireAuth([]);
     if (!$userData) return null;
-    var_dump($userData);
     return [
       'id'        => $userData['id'],
       'firstname' => $userData['firstname'],
@@ -37,17 +36,10 @@ class UserController
   #[Authenticated]
   public function profile()
   {
-    $user = [
-      "id" => 1,
-      "firstname" => "Jhon",
-      "lastname" => "Doe"
-    ];
+    $user = $this->getUser();
 
     $reservation = (new ReservationRepository())->findByUserId($user['id']);
     $user = [
-      "id" => 1,
-      "firstname" => "Jhon",
-      "lastname" => "Doe",
       "reservation" => $reservation
     ];
     // Ici, on pourrait récupérer des infos supplémentaires de la DB

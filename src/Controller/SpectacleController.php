@@ -92,7 +92,7 @@ class SpectacleController
       'user' => $user
     ]);
   }
-  // #[Authenticated(roles: ['admin'])]
+  #[Authenticated(roles: ['admin'])]
   public function new(): void
   {
     $user = $this->getUser();
@@ -175,8 +175,9 @@ class SpectacleController
         return;
     }
 
+    $user = $this->getUser();
     $reservation = new Reservation(
-        userId: 1,
+        userId: $user['id'],
         spectacleId: (int)$spectacleId,
         date: $reservationDateTime
     );
