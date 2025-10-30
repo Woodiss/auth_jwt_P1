@@ -31,12 +31,13 @@ $route = strpos($requestUri, $basePath) === 0 ? substr($requestUri, strlen($base
 $route = empty($route) || $route === '/' ? '/home' : $route;
 
 // --- Contrôleurs ---
-$spectacleController = new SpectacleController($twig);
-$userController = new UserController($twig);
-$authController = new AuthController($twig, $jwt);
+$spectacleController = new SpectacleController($twig, $authMiddleware);
+$userController = new UserController($twig, $authMiddleware);
+$authController = new AuthController($twig, $jwt, $basePath);
 $routes = [
   '/home' => [$spectacleController, 'home'],
   '/spectacles' => [$spectacleController, 'list'],
+  '/spectacles/reservation' => [$spectacleController, 'reservation'],
   '/profile' => [$userController, 'profile'], // ← route protégée
   '/login'       => [$authController, 'login'],
   '/register'    => [$authController, 'register'],
