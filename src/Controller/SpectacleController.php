@@ -147,50 +147,49 @@ class SpectacleController
     $errors = [];
 
     if (!$spectacleId) {
-        echo "Spectacle non spécifié.";
-        return;
+      echo "Spectacle non spécifié.";
+      return;
     }
 
     if (!$reservationDate) {
-        $errors['reservation_date'] = "La date de réservation est obligatoire.";
+      $errors['reservation_date'] = "La date de réservation est obligatoire.";
     } else {
-        // Vérifiez que la date est dans le futur
-        $reservationDateTime = new \DateTime($reservationDate);
-        $currentDateTime = new \DateTime();
+      // Vérifiez que la date est dans le futur
+      $reservationDateTime = new \DateTime($reservationDate);
+      $currentDateTime = new \DateTime();
 
-        if ($reservationDateTime <= $currentDateTime) {
-            $errors['reservation_date'] = "La date de réservation doit être dans le futur.";
-        }
+      if ($reservationDateTime <= $currentDateTime) {
+        $errors['reservation_date'] = "La date de réservation doit être dans le futur.";
+      }
     }
 
     if (!empty($errors)) {
-        // Renvoyez les erreurs au formulaire
-        $repoSpectacle = new SpectacleRepository();
-        $spectacle = $repoSpectacle->find($spectacleId);
+      // Renvoyez les erreurs au formulaire
+      $repoSpectacle = new SpectacleRepository();
+      $spectacle = $repoSpectacle->find($spectacleId);
 
-        echo $this->twig->render('spectacles/show.html.twig', [
-            'spectacle' => $spectacle,
-            'errors' => $errors,
-        ]);
-        return;
+      echo $this->twig->render('spectacles/show.html.twig', [
+        'spectacle' => $spectacle,
+        'errors' => $errors,
+        'user' => $this->getUser()
+      ]);
+      return;
     }
 
     $user = $this->getUser();
     $reservation = new Reservation(
-        userId: $user['id'],
-        spectacleId: (int)$spectacleId,
-        date: $reservationDateTime
+      userId: $user['id'],
+      spectacleId: (int)$spectacleId,
+      date: $reservationDateTime
     );
 
     try {
-        (new ReservationRepository())->create($reservation);
-        header('Location: ./../spectacles', true, 303);
-        exit;
+      (new ReservationRepository())->create($reservation);
+      header('Location: ./../spectacles', true, 303);
+      exit;
     } catch (\Throwable $e) {
-        echo "Erreur lors de la réservation.";
+      echo "Erreur lors de la réservation.";
     }
-
   }
 }
 
- 
