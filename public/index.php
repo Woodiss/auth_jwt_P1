@@ -45,6 +45,7 @@ $routes = [
   '/spectacles/new' => [$spectacleController, 'new'],
   '/refresh' => fn() => print("Route de refresh token"),
   '/enable-2fa' => [$authController, 'enable2FA'],
+  '/disable-2fa' => [$authController, 'disable2FA']
 ];
 
 // --- Gestion dynamique des spectacles individuels ---

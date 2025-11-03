@@ -1,0 +1,16 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Add Phone{% endblock %}
+{% block content %}
+  
+<h2>Ajoutez votre numéro de téléphone</h2>
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
+<form method="POST" action="{{ basePath }}/enable-2fa">
+    <label for="phone">Téléphone (+33XXXXXXXXX) :</label>
+    <input type="text" name="phone" id="phone" required placeholder="+330657207845" />
+    <button type="submit">Enregistrer</button>
+</form>
+{% endblock %}

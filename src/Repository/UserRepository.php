@@ -129,11 +129,25 @@ final class UserRepository
     ');
     $stmt->execute([$secret, $method, $userId]);
   }
-  public function disableTwoFactor(int $userId): void
+
+  public function disableTwoFactor(int $userId): bool
   {
     $stmt = $this->pdo->prepare('
         UPDATE user SET two_factor_secret = NULL, two_factor_method = "none" WHERE id = ?
     ');
     $stmt->execute([$userId]);
+
+    // Renvoie true si au moins une ligne a été modifiée
+    return $stmt->rowCount() > 0;
+  }
+
+  public function updatePhone(int $userId, string $phone): void
+  {
+    $sql = "UPDATE user SET phone = :phone WHERE id = :id";
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute([
+      ':phone' => $phone,
+      ':id' => $userId
+    ]);
   }
 }

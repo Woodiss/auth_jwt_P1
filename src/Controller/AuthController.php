@@ -41,7 +41,7 @@ final class AuthController
       'role'      => $userData['role'],
       'fullname'  => $userData['fullname'],
       'phone' => $userData['phone'],
-      'twoFactorMethod ' => $userData['twoFactorMethod ']
+      'twoFactorMethod' => $userData['twoFactorMethod'] ?? 'none'
     ];
   }
   /** GET/POST /login */
@@ -149,7 +149,7 @@ final class AuthController
       'role' => $user->getRole(),
       'fullname' => $user->getFullname(),
       'phone' => $user->getPhone(),
-      'twoFactorMethod ' => $user->getTwoFactorMethod()
+      'twoFactorMethod' => $user->getTwoFactorMethod()
     ]);
 
     $this->setJwtCookie($token);
@@ -289,6 +289,7 @@ final class AuthController
   }
 
 
+
   public function enable2FA(): void
   {
     session_start();
@@ -301,7 +302,7 @@ final class AuthController
     $twoFactorService = new TwoFactorService();
     $userRepository = new UserRepository();
 
-    // Si l'utilisateur soumet le code
+    // --------------------- SOUMISSION D'UN CODE ---------------------
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp'])) {
       $inputCode = trim($_POST['otp']);
       $method = $_SESSION['pending_2fa_method'] ?? 'otp';
@@ -315,10 +316,27 @@ final class AuthController
         return;
       }
 
-      // Vérifie le code en fonction de la méthode
+
       if ($twoFactorService->verifyCode($method, $secret, $inputCode)) {
         $userRepository->updateTwoFactorSecret($user['id'], $secret, $method);
         unset($_SESSION['pending_2fa_secret'], $_SESSION['pending_2fa_method']);
+
+        // 🔹 Recharger l'utilisateur pour récupérer la méthode à jour
+        $user = $userRepository->find($user['id']);
+
+        // 🔹 Générer un nouveau JWT
+        $token = $this->jwt->generate([
+          'id' => $user->getId(),
+          'firstname' => $user->getFirstname(),
+          'lastname' => $user->getLastname(),
+          'email' => $user->getEmail(),
+          'role' => $user->getRole(),
+          'fullname' => $user->getFullname(),
+          'phone' => $user->getPhone(),
+          'twoFactorMethod' => $user->getTwoFactorMethod()
+        ]);
+
+        $this->setJwtCookie($token); // 🔹 mettre à jour le cookie
 
         echo $this->twig->render('enable_2fa_success.html.twig', [
           'message' => 'La double authentification est activée avec succès !',
@@ -327,9 +345,9 @@ final class AuthController
         return;
       }
 
-      // Si code invalide → on réaffiche selon la méthode
-      $error = 'Code invalide. Veuillez réessayer.';
 
+      // Code invalide → réaffichage
+      $error = 'Code invalide. Veuillez réessayer.';
       if ($method === 'otp') {
         $qrCodeUrl = $twoFactorService->getQrCodeUrl($user['email'], $secret, 'MonApp');
         $qrImage = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($qrCodeUrl) . "&size=200x200";
@@ -349,14 +367,25 @@ final class AuthController
       return;
     }
 
-    // Si l'utilisateur choisit une méthode (formulaire initial)
+    // --------------------- SOUMISSION DE LA METHODE ---------------------
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['method'])) {
       $method = $_POST['method'];
       $_SESSION['pending_2fa_method'] = $method;
 
+      // Si SMS et téléphone manquant → demander téléphone
+      if ($method === 'sms' && empty($user['phone'])) {
+        echo $this->twig->render('add_phone.html.twig', [
+          'error' => null,
+          'user' => $user
+        ]);
+        return;
+      }
+
+      // Génération du secret pour la méthode choisie
       $secret = $twoFactorService->generateSecret($method);
       $_SESSION['pending_2fa_secret'] = $secret;
 
+      // Envoi ou affichage selon la méthode
       if ($method === 'otp') {
         $qrCodeUrl = $twoFactorService->getQrCodeUrl($user['email'], $secret, 'MonApp');
         $qrImage = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($qrCodeUrl) . "&size=200x200";
@@ -374,7 +403,6 @@ final class AuthController
           'user' => $user
         ]);
       } elseif ($method === 'sms') {
-        // ⚠️ ton user doit avoir un champ "phone" en BDD
         $twoFactorService->sendSmsCode($user['phone'], $secret);
         echo $this->twig->render('enable_2fa_verify_code.html.twig', [
           'method' => 'sms',
@@ -385,9 +413,75 @@ final class AuthController
       return;
     }
 
-    // Première étape → choix du mode 2FA
+    // --------------------- SOUMISSION DU TELEPHONE ---------------------
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['phone'])) {
+      $phone = trim($_POST['phone']);
+      if (!preg_match('/^\+\d{11,14}$/', $phone)) {
+        echo $this->twig->render('add_phone.html.twig', [
+          'error' => 'Format invalide. Ex : +330657207845',
+          'user' => $user
+        ]);
+        return;
+      }
+
+      $userRepository->updatePhone($user['id'], $phone);
+      $user['phone'] = $phone; // recharge info utilisateur
+
+      // Génération du code SMS
+      $secret = $twoFactorService->generateSecret('sms');
+      $_SESSION['pending_2fa_secret'] = $secret;
+      $_SESSION['pending_2fa_method'] = 'sms';
+      $twoFactorService->sendSmsCode($phone, $secret);
+
+      echo $this->twig->render('enable_2fa_verify_code.html.twig', [
+        'method' => 'sms',
+        'error' => null,
+        'user' => $user
+      ]);
+      return;
+    }
+
+    // --------------------- PREMIERE ETAPE : CHOIX DU MODE ---------------------
     echo $this->twig->render('enable_2fa_choice.html.twig', [
       'user' => $user
     ]);
+  }
+
+
+
+  public function disable2FA(): void
+  {
+    $user = $this->getUser();
+    if (!$user) {
+      header('Location: ' . $this->basePath . '/login', true, 303);
+      exit;
+    }
+
+    $userRepository = new UserRepository();
+    $success = $userRepository->disableTwoFactor($user['id']);
+
+    if ($success) {
+      // 🔹 Recharger l'utilisateur depuis la BDD pour récupérer les infos à jour
+      $updatedUser = $userRepository->findByEmail($user['email']);
+
+      // 🔹 Régénérer un nouveau JWT avec twoFactorMethod à jour
+      $token = $this->jwt->generate([
+        'id' => $updatedUser->getId(),
+        'firstname' => $updatedUser->getFirstname(),
+        'lastname' => $updatedUser->getLastname(),
+        'email' => $updatedUser->getEmail(),
+        'role' => $updatedUser->getRole(),
+        'fullname' => $updatedUser->getFullname(),
+        'phone' => $updatedUser->getPhone(),
+        'twoFactorMethod' => $updatedUser->getTwoFactorMethod() ?? 'none' // <- important
+      ]);
+
+      // 🔹 Mettre à jour le cookie JWT avant toute sortie
+      $this->setJwtCookie($token);
+
+      // 🔹 Redirection vers le profil
+      header('Location: ' . $this->basePath . '/profile', true, 303);
+      exit;
+    }
   }
 }
