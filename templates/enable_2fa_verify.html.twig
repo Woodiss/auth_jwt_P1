@@ -1,0 +1,27 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Activer la double authentification{% endblock %}
+
+{% block content %}
+  <section style="max-width: 400px; margin: 2rem auto; text-align: center;">
+    <h2>🔐 Activer la double authentification</h2>
+
+    <p>Scannez ce QR code dans votre application d’authentification (Google Authenticator, Authy, etc.) :</p>
+    <img src="{{ qrImage }}" alt="QR Code 2FA" style="margin: 1rem 0; border: 1px solid #ccc; padding: 10px;">
+
+    <p>Ou ajoutez manuellement ce code secret :</p>
+    <code style="display: block; margin-bottom: 1rem; font-weight: bold;">{{ secret }}</code>
+
+    {% if error %}
+      <p style="color: red; font-weight: bold;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" style="margin-top: 1rem;">
+      <label for="otp">Entrez le code à 6 chiffres généré par votre application :</label><br>
+      <input type="text" id="otp" name="otp" required minlength="6" maxlength="6"
+             style="margin: 0.5rem 0; padding: 0.5rem; text-align: center;">
+      <br>
+      <button type="submit" style="padding: 0.5rem 1rem;">✅ Vérifier et activer</button>
+    </form>
+  </section>
+{% endblock %}

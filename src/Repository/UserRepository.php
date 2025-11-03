@@ -16,22 +16,14 @@ final class UserRepository
     $this->pdo = Connexion::get();
   }
 
-  public function find(int $id): ?array
+
+  public function find(int $id): ?User
   {
     $stmt = $this->pdo->prepare('SELECT * FROM user WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
-    return $row ?: null;
-  }
 
-  public function findByEmail(string $email): ?User
-  {
-    $stmt = $this->pdo->prepare('SELECT * FROM user WHERE email = ?');
-    $stmt->execute([$email]);
-    $row = $stmt->fetch();
-    if (!$row) {
-      return null;
-    }
+    if (!$row) return null;
 
     return new User(
       id: (int)$row['id'],
@@ -39,9 +31,40 @@ final class UserRepository
       lastName: $row['lastname'],
       email: $row['email'],
       passwordHash: $row['password'],
-      role: $row['role']
+      role: $row['role'],
+      twoFactorMethod: $row['two_factor_method'] ?? null,
+      twoFactorSecret: $row['two_factor_secret'] ?? null,
+      phone: $row['phone'] ?? null,
+      refreshToken: $row['refresh_token'] ?? null,
+      refreshTokenExpiresAt: $row['refresh_token_expires_at'] ?? null
     );
   }
+
+
+
+  public function findByEmail(string $email): ?User
+  {
+    $stmt = $this->pdo->prepare('SELECT * FROM user WHERE email = ?');
+    $stmt->execute([$email]);
+    $row = $stmt->fetch();
+
+    if (!$row) return null;
+
+    return new User(
+      id: (int)$row['id'],
+      firstName: $row['firstname'],
+      lastName: $row['lastname'],
+      email: $row['email'],
+      passwordHash: $row['password'],
+      role: $row['role'],
+      twoFactorMethod: $row['two_factor_method'] ?? null,
+      twoFactorSecret: $row['two_factor_secret'] ?? null,
+      phone: $row['phone'] ?? null,
+      refreshToken: $row['refresh_token'] ?? null,
+      refreshTokenExpiresAt: $row['refresh_token_expires_at'] ?? null
+    );
+  }
+
 
   public function create(User $user): int
   {
@@ -67,6 +90,7 @@ final class UserRepository
     $stmt->execute([$token, $expiresAt, $userId]);
   }
 
+
   public function findByRefreshToken(string $token): ?User
   {
     $stmt = $this->pdo->prepare('
@@ -77,7 +101,6 @@ final class UserRepository
 
     if (!$row) return null;
 
-
     return new User(
       id: (int)$row['id'],
       firstName: $row['firstname'],
@@ -85,13 +108,32 @@ final class UserRepository
       email: $row['email'],
       passwordHash: $row['password'],
       role: $row['role'],
+      twoFactorMethod: $row['two_factor_method'] ?? null,
+      twoFactorSecret: $row['two_factor_secret'] ?? null,
+      phone: $row['phone'] ?? null,
       refreshToken: $row['refresh_token'] ?? null,
       refreshTokenExpiresAt: $row['refresh_token_expires_at'] ?? null
     );
   }
+
+
   public function updateRefreshToken(int $userId, string $token, string $expiresAt): void
   {
     $stmt = $this->pdo->prepare('UPDATE user SET refresh_token = ?, refresh_token_expires_at = ? WHERE id = ?');
     $stmt->execute([$token, $expiresAt, $userId]);
+  }
+  public function updateTwoFactorSecret(int $userId, string $secret, string $method): void
+  {
+    $stmt = $this->pdo->prepare('
+        UPDATE user SET two_factor_secret = ?, two_factor_method = ? WHERE id = ?
+    ');
+    $stmt->execute([$secret, $method, $userId]);
+  }
+  public function disableTwoFactor(int $userId): void
+  {
+    $stmt = $this->pdo->prepare('
+        UPDATE user SET two_factor_secret = NULL, two_factor_method = "none" WHERE id = ?
+    ');
+    $stmt->execute([$userId]);
   }
 }

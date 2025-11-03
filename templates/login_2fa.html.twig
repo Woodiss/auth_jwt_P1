@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+  Connexion 2FA
+{% endblock %}
+
+{% block content %}
+  
+<h1>Vérification en deux étapes</h1>
+<form method="post">
+    <input type="hidden" name="email" value="{{ email }}">
+    <label>Code Google Authenticator :</label>
+    <input type="text" name="otp" placeholder="123456" required>
+    {% if errors.otp %}
+        <p style="color:red">{{ errors.otp }}</p>
+    {% endif %}
+    <button type="submit">Valider</button>
+</form>
+{% endblock %}

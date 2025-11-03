@@ -1,6 +1,7 @@
 {
     "require": {
-        "twig/twig": "^3.21"
+        "twig/twig": "^3.21",
+        "spomky-labs/otphp": "^11.3"
     },
     "autoload": {
     "psr-4": {
