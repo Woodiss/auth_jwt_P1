@@ -1,0 +1,12 @@
+{% extends "base.html.twig" %}
+{% block content %}
+  
+<h2>Activer la double authentification</h2>
+
+<form method="post" action="">
+  <label><input type="radio" name="method" value="otp" required> Application d'authentification</label><br>
+  <label><input type="radio" name="method" value="email"> Email</label><br>
+  <label><input type="radio" name="method" value="sms"> SMS</label><br>
+  <button type="submit">Continuer</button>
+</form>
+{% endblock %}

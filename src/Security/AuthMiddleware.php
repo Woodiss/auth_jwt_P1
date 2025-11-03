@@ -44,7 +44,8 @@ class AuthMiddleware
           'role'      => $user->getRole(),
           'firstname' => $user->getFirstName(),
           'lastname'  => $user->getLastName(),
-          'fullname' => $user->getFullName()
+          'fullname' => $user->getFullName(),
+          'phone' => $user->getPhone()
         ]);
 
         // Remplace le cookie existant

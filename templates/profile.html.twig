@@ -4,6 +4,12 @@
 {% endblock %}
 
 {% block content %}
+{% if user.twoFactorMethod %}
+ <p><strong>🔐 2FA Activé avec {{user.twoFactorMethod}}</strong></p> 
+ {% else %}
+   
+  <a href="{{ basePath }}/enable-2fa">Activer 2FA</a>
+{% endif %}
 	<h2>Vos réservations</h2>
 
 	{% if reservation is not empty %}

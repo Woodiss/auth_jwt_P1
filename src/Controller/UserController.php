@@ -20,7 +20,6 @@ class UserController
   {
     $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
     if (!$payload) return null;
-
     $userData = $this->auth->requireAuth([]);
     if (!$userData) return null;
     return [
@@ -30,6 +29,8 @@ class UserController
       'email'     => $userData['email'],
       'role'      => $userData['role'],
       'fullname'  => $userData['fullname'],
+      'phone' => $userData['phone'],
+      'twoFactorMethod' => $userData['twoFactorMethod ']
     ];
   }
 
@@ -40,8 +41,11 @@ class UserController
 
     $reservation = (new ReservationRepository())->findByUserId($user['id']);
     $user = [
-      "reservation" => $reservation
+      "reservation" => $reservation,
+      'twoFactorMethod' => $user['twoFactorMethod']
+
     ];
+    print_r($_ENV);
     // Ici, on pourrait récupérer des infos supplémentaires de la DB
     echo $this->twig->render('profile.html.twig', [
       'user' => $user, // injecté via middleware si nécessaire

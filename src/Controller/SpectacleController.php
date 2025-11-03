@@ -40,6 +40,8 @@ class SpectacleController
       'email'     => $userData['email'],
       'role'      => $userData['role'],
       'fullname'  => $userData['fullname'],
+      'phone' => $userData['phone'],
+      'twoFactorMethod ' => $userData['twoFactorMethod ']
     ];
   }
   /**
@@ -192,4 +194,3 @@ class SpectacleController
     }
   }
 }
-

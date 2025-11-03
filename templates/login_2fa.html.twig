@@ -1,18 +1,32 @@
 {% extends 'base.html.twig' %}
-{% block title %}
-  Connexion 2FA
-{% endblock %}
+
+{% block title %}Vérification 2FA{% endblock %}
 
 {% block content %}
-  
-<h1>Vérification en deux étapes</h1>
-<form method="post">
-    <input type="hidden" name="email" value="{{ email }}">
-    <label>Code Google Authenticator :</label>
-    <input type="text" name="otp" placeholder="123456" required>
+<div class="login-2fa-container">
+    <h2>Vérification en deux étapes</h2>
+
     {% if errors.otp %}
-        <p style="color:red">{{ errors.otp }}</p>
+        <p class="error">{{ errors.otp }}</p>
     {% endif %}
-    <button type="submit">Valider</button>
-</form>
+
+    <p>
+        {% if user.twoFactorMethod == 'totp' %}
+            Entrez le code affiché dans votre application Google Authenticator.
+        {% elseif user.twoFactorMethod == 'email' %}
+            Nous avons envoyé un code à votre adresse email : <strong>{{ user.email }}</strong>.
+        {% elseif user.twoFactorMethod == 'sms' %}
+            Nous avons envoyé un code par SMS au numéro : <strong>{{ user.phone }}</strong>.
+        {% endif %}
+    </p>
+
+    <form method="post" action="{{ basePath }}/login">
+        <label for="otp">Code :</label>
+        <input type="text" id="otp" name="otp" maxlength="6" required>
+        <button type="submit">Valider</button>
+    </form>
+
+    <p><a href="{{ basePath }}/login">Retour à la connexion</a></p>
+</div>
 {% endblock %}
+

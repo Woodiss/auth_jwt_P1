@@ -40,9 +40,12 @@ final class AuthController
       'email'     => $userData['email'],
       'role'      => $userData['role'],
       'fullname'  => $userData['fullname'],
+      'phone' => $userData['phone'],
+      'twoFactorMethod ' => $userData['twoFactorMethod ']
     ];
   }
   /** GET/POST /login */
+
 
 
   public function login(): void
@@ -57,6 +60,7 @@ final class AuthController
 
     $errors = [];
     $repo = new UserRepository();
+    $twoFactorService = new TwoFactorService();
 
     // ----------------- PHASE OTP -----------------
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($data['otp'])) {
@@ -68,16 +72,19 @@ final class AuthController
       }
 
       $user = $repo->find($_SESSION['2fa_user_id']);
-      $twoFactorService = new \App\Service\TwoFactorService();
 
-      if ($twoFactorService->verifyCode($user->getTwoFactorSecret(), $data['otp'])) {
+      // Vérifie le code selon la méthode 2FA de l’utilisateur
+      if ($twoFactorService->verifyCode($user->getTwoFactorMethod(), $user->getTwoFactorSecret(), $data['otp'])) {
         // ✅ Code correct → login final
         unset($_SESSION['2fa_user_id']); // nettoyage
         $this->finalizeLogin($user, $repo);
         return;
       } else {
         $errors['otp'] = 'Code OTP invalide.';
-        echo $this->twig->render('login_2fa.html.twig', ['errors' => $errors, 'email' => $user->getEmail()]);
+        echo $this->twig->render('login_2fa.html.twig', [
+          'errors' => $errors,
+          'email' => $user->getEmail()
+        ]);
         return;
       }
     }
@@ -89,10 +96,29 @@ final class AuthController
       if (!$user || !password_verify($data['password'], $user->getPasswordHash())) {
         $errors['global'] = 'Email ou mot de passe incorrect.';
       } else {
+
+        // Vérifie si l’utilisateur a activé la 2FA
         if ($user->getTwoFactorSecret()) {
-          // 2FA activé → stocke temporairement l’utilisateur
           $_SESSION['2fa_user_id'] = $user->getId();
-          echo $this->twig->render('login_2fa.html.twig', ['errors' => $errors, 'email' => $user->getEmail()]);
+          $method = $user->getTwoFactorMethod();
+
+          // Si la méthode est email ou sms, on génère et envoie un code temporaire
+          if ($method === 'email' || $method === 'sms') {
+            $code = $twoFactorService->generateSecret($method);
+            $repo->updateTwoFactorSecret($user->getId(), $code, $method);
+
+            if ($method === 'email') {
+              $twoFactorService->sendEmailCode($user->getEmail(), $code);
+            } elseif ($method === 'sms') {
+              $twoFactorService->sendSmsCode($user->getPhone(), $code);
+            }
+          }
+
+          // Affiche le formulaire OTP
+          echo $this->twig->render('login_2fa.html.twig', [
+            'errors' => $errors,
+            'email' => $user->getEmail()
+          ]);
           return;
         } else {
           // Pas de 2FA → login direct
@@ -122,6 +148,8 @@ final class AuthController
       'email' => $user->getEmail(),
       'role' => $user->getRole(),
       'fullname' => $user->getFullname(),
+      'phone' => $user->getPhone(),
+      'twoFactorMethod ' => $user->getTwoFactorMethod()
     ]);
 
     $this->setJwtCookie($token);
@@ -260,6 +288,7 @@ final class AuthController
     echo json_encode(['status' => 'Access token refreshed']);
   }
 
+
   public function enable2FA(): void
   {
     session_start();
@@ -272,9 +301,10 @@ final class AuthController
     $twoFactorService = new TwoFactorService();
     $userRepository = new UserRepository();
 
-    // Si l'utilisateur vient de soumettre le code
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-      $inputCode = trim($_POST['otp'] ?? '');
+    // Si l'utilisateur soumet le code
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp'])) {
+      $inputCode = trim($_POST['otp']);
+      $method = $_SESSION['pending_2fa_method'] ?? 'otp';
       $secret = $_SESSION['pending_2fa_secret'] ?? null;
 
       if (!$secret) {
@@ -285,43 +315,78 @@ final class AuthController
         return;
       }
 
-      // Vérification du code TOTP entré par l'utilisateur
-      if ($twoFactorService->verifyCode($secret, $inputCode)) {
-        // ✅ Code valide → on enregistre le secret définitivement
-        $userRepository->updateTwoFactorSecret($user['id'], $secret, 'otp');
-        unset($_SESSION['pending_2fa_secret']);
+      // Vérifie le code en fonction de la méthode
+      if ($twoFactorService->verifyCode($method, $secret, $inputCode)) {
+        $userRepository->updateTwoFactorSecret($user['id'], $secret, $method);
+        unset($_SESSION['pending_2fa_secret'], $_SESSION['pending_2fa_method']);
 
         echo $this->twig->render('enable_2fa_success.html.twig', [
-          'message' => 'La double authentification est activée avec succès !'
+          'message' => 'La double authentification est activée avec succès !',
+          'user' => $user
         ]);
-      } else {
-        // ❌ Mauvais code → réafficher le formulaire avec le QR
+        return;
+      }
+
+      // Si code invalide → on réaffiche selon la méthode
+      $error = 'Code invalide. Veuillez réessayer.';
+
+      if ($method === 'otp') {
         $qrCodeUrl = $twoFactorService->getQrCodeUrl($user['email'], $secret, 'MonApp');
         $qrImage = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($qrCodeUrl) . "&size=200x200";
-
         echo $this->twig->render('enable_2fa_verify.html.twig', [
           'qrImage' => $qrImage,
           'secret' => $secret,
-          'error' => 'Code invalide. Veuillez réessayer.',
+          'error' => $error,
           'user' => $user
         ]);
-        echo "Hello world !";
+      } else {
+        echo $this->twig->render('enable_2fa_verify_code.html.twig', [
+          'method' => $method,
+          'error' => $error,
+          'user' => $user
+        ]);
       }
       return;
     }
 
-    // Première étape : génération du secret et affichage du QR code
-    $secret = $twoFactorService->generateSecret();
-    $_SESSION['pending_2fa_secret'] = $secret;
+    // Si l'utilisateur choisit une méthode (formulaire initial)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['method'])) {
+      $method = $_POST['method'];
+      $_SESSION['pending_2fa_method'] = $method;
 
-    $qrCodeUrl = $twoFactorService->getQrCodeUrl($user['email'], $secret, 'MonApp');
-    $qrImage = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($qrCodeUrl) . "&size=200x200";
+      $secret = $twoFactorService->generateSecret($method);
+      $_SESSION['pending_2fa_secret'] = $secret;
 
-    // Afficher le QR code + champ pour saisir le premier code TOTP
-    echo $this->twig->render('enable_2fa_verify.html.twig', [
-      'qrImage' => $qrImage,
-      'secret' => $secret,
-      'error' => null,
+      if ($method === 'otp') {
+        $qrCodeUrl = $twoFactorService->getQrCodeUrl($user['email'], $secret, 'MonApp');
+        $qrImage = "https://api.qrserver.com/v1/create-qr-code/?data=" . urlencode($qrCodeUrl) . "&size=200x200";
+        echo $this->twig->render('enable_2fa_verify.html.twig', [
+          'qrImage' => $qrImage,
+          'secret' => $secret,
+          'error' => null,
+          'user' => $user
+        ]);
+      } elseif ($method === 'email') {
+        $twoFactorService->sendEmailCode($user['email'], $secret);
+        echo $this->twig->render('enable_2fa_verify_code.html.twig', [
+          'method' => 'email',
+          'error' => null,
+          'user' => $user
+        ]);
+      } elseif ($method === 'sms') {
+        // ⚠️ ton user doit avoir un champ "phone" en BDD
+        $twoFactorService->sendSmsCode($user['phone'], $secret);
+        echo $this->twig->render('enable_2fa_verify_code.html.twig', [
+          'method' => 'sms',
+          'error' => null,
+          'user' => $user
+        ]);
+      }
+      return;
+    }
+
+    // Première étape → choix du mode 2FA
+    echo $this->twig->render('enable_2fa_choice.html.twig', [
       'user' => $user
     ]);
   }
