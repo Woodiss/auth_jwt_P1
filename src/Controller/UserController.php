@@ -30,7 +30,7 @@ class UserController
       'role'      => $userData['role'],
       'fullname'  => $userData['fullname'],
       'phone' => $userData['phone'],
-      'twoFactorMethod' => $userData['twoFactorMethod']
+      'twoFactorMethod' => $userData['twoFactorMethod'] ?? 'none'
     ];
   }
 
