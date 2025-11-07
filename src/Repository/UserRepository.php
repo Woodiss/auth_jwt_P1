@@ -16,12 +16,25 @@ final class UserRepository
     $this->pdo = Connexion::get();
   }
 
-  public function find(int $id): ?array
+  public function find(int $id): ?User
   {
     $stmt = $this->pdo->prepare('SELECT * FROM user WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
-    return $row ?: null;
+
+    $row = $stmt->fetch();
+    if (!$row) {
+      return null;
+    }
+
+    return new User(
+      id: (int)$row['id'],
+      firstName: $row['firstname'],
+      lastName: $row['lastname'],
+      email: $row['email'],
+      passwordHash: $row['password'],
+      role: $row['role']
+    );
   }
 
   public function findByEmail(string $email): ?User
@@ -93,5 +106,41 @@ final class UserRepository
   {
     $stmt = $this->pdo->prepare('UPDATE user SET refresh_token = ?, refresh_token_expires_at = ? WHERE id = ?');
     $stmt->execute([$token, $expiresAt, $userId]);
+  }
+
+  public function disableMfaForUser($userId): void
+  {
+    $sql = "UPDATE user
+            SET mfa_method = NULL, 
+                mfa_totp = NULL, 
+                mfa_email_otp = NULL 
+            WHERE id = ?";
+    
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute([$userId]);
+  }
+
+  public function storeEmailOtpBundle(string $bundle, $userId): void
+  {
+      $sql = "UPDATE user
+              SET mfa_method = 'EMAIL',
+                  mfa_totp = NULL, 
+                  mfa_email_otp = ? 
+              WHERE id = ?";
+      
+      $stmt = $this->pdo->prepare($sql);
+      $stmt->execute([$bundle, $userId]);
+  }
+
+  public function storeTotpBlob(string $blob, $userId): void
+  {
+      $sql = "UPDATE user
+              SET mfa_method = 'TOTP',
+                  mfa_totp = ?,
+                  mfa_email_otp = NULL
+              WHERE id = ?";
+
+      $stmt = $this->pdo->prepare($sql);
+      $stmt->execute([$blob, $userId]);
   }
 }

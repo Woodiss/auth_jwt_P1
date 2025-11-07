@@ -33,7 +33,7 @@ $route = empty($route) || $route === '/' ? '/home' : $route;
 // --- Contrôleurs ---
 $spectacleController = new SpectacleController($twig, $authMiddleware);
 $userController = new UserController($twig, $authMiddleware);
-$authController = new AuthController($twig, $jwt, $basePath);
+$authController = new AuthController($twig, $jwt, $basePath, $authMiddleware);
 $routes = [
   '/home' => [$spectacleController, 'home'],
   '/spectacles' => [$spectacleController, 'list'],
@@ -43,6 +43,8 @@ $routes = [
   '/register'    => [$authController, 'register'],
   '/logout'      => [$authController, 'logout'],
   '/spectacles/new' => [$spectacleController, 'new'],
+  '/security' => [$authController, 'security'],
+  '/mfa/totp/begin' => [$authController, 'totpBegin'],
   '/refresh' => fn() => print("Route de refresh token"),
 ];
 

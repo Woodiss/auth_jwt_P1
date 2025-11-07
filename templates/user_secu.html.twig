@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Security Settings{% endblock %}
+
+{% block content %}
+<h1>activer la 2FA</h1>
+<p>Par quel méthod voulez vous activez la double authentification ?</p>
+<form method="post">
+    {% if errors is defined and errors|length %}
+        <div class="mb-3 text-sm text-red-700">
+        {{ errors|join('<br>')|raw }}
+        </div>
+    {% endif %}
+    <div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+        <label for="qrcode" >activer la 2FA (via QRcode)</label>
+        <input type="checkbox" id="qrcode" name="qrcode">
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+        <label for="email">activer la 2FA (via email)</label>
+        <input type="checkbox" id="email" name="email">
+        </div>
+    </div>
+    <div>
+        <button type="submit">modifier</button>
+    </div>
+</form>
+{% endblock %}

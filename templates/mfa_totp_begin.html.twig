@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activer la 2FA (TOTP){% endblock %}
+
+{% block content %}
+  <h1>Activer la 2FA (TOTP)</h1>
+
+  <p>Scannez ce QR code avec Google Authenticator / Authy sur votre téléphone
+     pour ajouter le compte <strong>{{ email }}</strong>.</p>
+
+  <div style="margin:1rem 0;">
+    <img src="{{ qr }}" alt="QR Code TOTP" style="max-width:280px; height:auto;"/>
+  </div>
+
+  <form method="post" action="{{ basePath }}/mfa/totp/confirm" autocomplete="off" novalidate>
+    <label for="code">Entrez le code à 6 chiffres affiché dans l’application :</label><br/>
+    <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required
+           style="padding:.5rem; font-size:1rem; letter-spacing:.2rem;"/>
+    <button type="submit" style="margin-left:.5rem;">Valider</button>
+  </form>
+
+  <p style="margin-top:1rem;">
+    <a href="{{ basePath }}/security">← Retour aux paramètres de sécurité</a>
+  </p>
+{% endblock %}

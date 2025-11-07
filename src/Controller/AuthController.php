@@ -4,21 +4,48 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use DateTime;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Security\JWT;
 use Twig\Environment as Twig;
+use App\Repository\UserRepository;
+use App\Security\AuthMiddleware;
+use RobThree\Auth\TwoFactorAuth;
+use RobThree\Auth\Providers\Qr\QRServerProvider;
+
 
 final class AuthController
 {
   private string $basePath;
+  private AuthMiddleware $auth;
+
 
   public function __construct(
     private Twig $twig,   // rendu des vues
     private JWT $jwt,
-    string $basePath
+    string $basePath,
+    AuthMiddleware $auth
+    
   ) {
     $this->basePath = $basePath;
+    $this->auth = $auth;
+  }
+
+  private function getUser(): ?array
+  {
+    $payload = $_COOKIE['jwt_Auth_P1'] ?? null;
+    if (!$payload) return null;
+
+    $userData = $this->auth->requireAuth([]);
+    if (!$userData) return null;
+    return [
+      'id'        => $userData['id'],
+      'firstname' => $userData['firstname'],
+      'lastname'  => $userData['lastname'],
+      'email'     => $userData['email'],
+      'role'      => $userData['role'],
+      'fullname'  => $userData['fullname'],
+    ];
   }
 
   /** GET/POST /login */
@@ -78,6 +105,7 @@ final class AuthController
             exit;
           }
         } catch (\Throwable $e) {
+          var_dump($e);
           $errors['global'] = "Erreur lors de la connexion.";
         }
       }
@@ -208,4 +236,95 @@ final class AuthController
 
     echo json_encode(['status' => 'Access token refreshed']);
   }
+
+  /** GET/POST /security */
+  public function security(): void
+  {
+      $data = [
+          'qrcode' => isset($_POST['qrcode']),
+          'email'  => isset($_POST['email']),
+      ];
+
+      $errors  = [];
+      $success = false;
+
+      if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+          // les deux cochées -> erreur
+          if ($data['qrcode'] && $data['email']) {
+              $errors['global'] = 'Merci de choisir une seule méthode (QR ou Email).';
+          }
+
+          // aucune cochée -> désactivation MFA
+          if (!$data['qrcode'] && !$data['email'] && !$errors) {
+              $repo = new UserRepository();
+              $userId = $this->getUser()['id'];
+              $repo->disableMfaForUser($userId); // 👉 À créer dans UserRepository
+              $success = true;
+          }
+
+          // QR -> redirection TOTP setup
+          if ($data['qrcode'] && !$data['email'] && !$errors) {
+              header('Location: ' . $this->basePath . '/mfa/totp/begin', true, 303);
+              exit;
+          }
+
+          // Email -> génération + redirection confirm
+          if ($data['email'] && !$data['qrcode'] && !$errors) {
+              // petite génération ici
+              $code    = (string) random_int(100000, 999999);
+              $hash    = password_hash($code, PASSWORD_DEFAULT);
+              $expires = (new DateTime('+5 minutes'))->format('Y-m-d H:i:s');
+              $bundle  = $hash . "|" . $expires;
+
+              $repo = new UserRepository();
+              $userId = $this->getUser()['id'];
+              $repo->storeEmailOtpBundle($bundle, $userId); // 👉 À créer aussi
+
+              // ❗ Envoi email à faire ici (ex: PHP mailer)
+
+              header('Location: ' . $this->basePath . '/mfa/email/confirm', true, 303);
+              exit;
+          }
+      }
+
+      echo $this->twig->render('user_secu.html.twig', [
+          'data'    => $data,
+          'errors'  => $errors,
+          'success' => $success,
+      ]);
+  }
+
+  public function totpBegin(): void
+  {
+      // 2) Récupérer l'email (label du compte dans l'app 2FA)
+      $repo = new UserRepository();
+      $userId = $this->getUser()['id'];
+      $user = $repo->find($userId);
+      $label = $user ? $user->getEmail() : ('user' . $userId);
+
+      // 3) Générer un secret TOTP temporaire + QR
+      $tfa = new TwoFactorAuth(
+          issuer: 'Auth_JWT_P1',                 // nom affiché dans l’app d’auth
+          qrcodeprovider: new QRServerProvider() // <-- bon nom d’argument + provider existant
+      );
+
+      $secret   = $tfa->createSecret();
+      $qrDataUri = $tfa->getQRCodeImageAsDataUri("user{$userId}", $secret);
+
+      // Stocker le secret en session (temporaire, pour la confirmation)
+      $_SESSION['pending_totp_secret_' . $userId] = $secret;
+
+      // Data-URI du QR à afficher
+      $qrDataUri = $tfa->getQRCodeImageAsDataUri($label, $secret);
+
+      // 4) Afficher la page avec le QR + formulaire de code
+      echo $this->twig->render('mfa_totp_begin.html.twig', [
+          'qr'       => $qrDataUri,
+          'basePath' => $this->basePath,
+          'email'    => $label,
+          'user'     => $this->getUser()
+      ]);
+  }
+
 }

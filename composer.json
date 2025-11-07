@@ -1,6 +1,7 @@
 {
     "require": {
-        "twig/twig": "^3.21"
+        "twig/twig": "^3.21",
+        "robthree/twofactorauth": "^3.0"
     },
     "autoload": {
     "psr-4": {

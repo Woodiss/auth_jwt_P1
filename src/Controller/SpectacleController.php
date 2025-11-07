@@ -171,6 +171,7 @@ class SpectacleController
         echo $this->twig->render('spectacles/show.html.twig', [
             'spectacle' => $spectacle,
             'errors' => $errors,
+            'user' => $this->getUser()
         ]);
         return;
     }
