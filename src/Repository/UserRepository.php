@@ -20,7 +20,6 @@ final class UserRepository
   {
     $stmt = $this->pdo->prepare('SELECT * FROM user WHERE id = ?');
     $stmt->execute([$id]);
-    $row = $stmt->fetch();
 
     $row = $stmt->fetch();
     if (!$row) {
@@ -33,7 +32,9 @@ final class UserRepository
       lastName: $row['lastname'],
       email: $row['email'],
       passwordHash: $row['password'],
-      role: $row['role']
+      role: $row['role'],
+      mfaMethod: $row['mfa_method'] ?? null,
+      mfaSecret: $row['mfa_secret'] ?? null
     );
   }
 
@@ -52,7 +53,9 @@ final class UserRepository
       lastName: $row['lastname'],
       email: $row['email'],
       passwordHash: $row['password'],
-      role: $row['role']
+      role: $row['role'],
+      mfaMethod: $row['mfa_method'] ?? null,
+      mfaSecret: $row['mfa_secret'] ?? null
     );
   }
 
@@ -90,7 +93,6 @@ final class UserRepository
 
     if (!$row) return null;
 
-
     return new User(
       id: (int)$row['id'],
       firstName: $row['firstname'],
@@ -108,36 +110,33 @@ final class UserRepository
     $stmt->execute([$token, $expiresAt, $userId]);
   }
 
-  public function disableMfaForUser($userId): void
+  public function disableMfaForUser(int $userId): void
   {
-    $sql = "UPDATE user
-            SET mfa_method = NULL, 
-                mfa_totp = NULL, 
-                mfa_email_otp = NULL 
-            WHERE id = ?";
-    
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute([$userId]);
+      $sql = "UPDATE user
+              SET mfa_method = NULL,
+                  mfa_secret = NULL
+              WHERE id = ?";
+
+      $stmt = $this->pdo->prepare($sql);
+      $stmt->execute([$userId]);
   }
 
-  public function storeEmailOtpBundle(string $bundle, $userId): void
+  public function storeEmailOtpBundle(string $bundle, int $userId): void
   {
       $sql = "UPDATE user
               SET mfa_method = 'EMAIL',
-                  mfa_totp = NULL, 
-                  mfa_email_otp = ? 
+                  mfa_secret = ?
               WHERE id = ?";
-      
+
       $stmt = $this->pdo->prepare($sql);
       $stmt->execute([$bundle, $userId]);
   }
 
-  public function storeTotpBlob(string $blob, $userId): void
+  public function storeTotpBlob(string $blob, int $userId): void
   {
       $sql = "UPDATE user
               SET mfa_method = 'TOTP',
-                  mfa_totp = ?,
-                  mfa_email_otp = NULL
+                  mfa_secret = ?
               WHERE id = ?";
 
       $stmt = $this->pdo->prepare($sql);

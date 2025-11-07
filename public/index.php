@@ -45,6 +45,8 @@ $routes = [
   '/spectacles/new' => [$spectacleController, 'new'],
   '/security' => [$authController, 'security'],
   '/mfa/totp/begin' => [$authController, 'totpBegin'],
+  '/mfa/totp/confirm' => [$authController, 'totpConfirm'],
+  '/mfa/verify' => [$authController, 'mfaVerify'],
   '/refresh' => fn() => print("Route de refresh token"),
 ];
 

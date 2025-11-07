@@ -12,6 +12,8 @@ final class User
   private string $email;
   private string $passwordHash;
   private string $role = 'user';
+  private ?string $mfaMethod = null;
+  private ?string $mfaSecret = null;
 
   // 🔹 Nouvelles propriétés pour le refresh token
   private ?string $refreshToken = null;
@@ -25,13 +27,18 @@ final class User
     ?int $id = null,
     ?string $role = null,
     ?string $refreshToken = null,
-    ?string $refreshTokenExpiresAt = null
+    ?string $refreshTokenExpiresAt = null,
+    ?string $mfaMethod = null,
+    ?string $mfaSecret = null
+
   ) {
     $this->id = $id;
     $this->firstName = $firstName;
     $this->lastName  = $lastName;
     $this->email = $email;
     $this->passwordHash = $passwordHash;
+    $this->mfaMethod = $mfaMethod;
+    $this->mfaSecret = $mfaSecret;
 
     if ($role !== null) {
       $this->role = $role;
@@ -83,6 +90,16 @@ final class User
   public function getRefreshTokenExpiresAt(): ?string
   {
     return $this->refreshTokenExpiresAt;
+  }
+
+  public function getMfaMethod(): ?string
+  {
+    return $this->mfaMethod;
+  }
+
+  public function getMfaSecret(): ?string
+  {
+    return $this->mfaSecret;
   }
 
   // 🔹 Setters si nécessaire
