@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1:3306
--- Généré le : jeu. 30 oct. 2025 à 01:07
+-- Généré le : sam. 08 nov. 2025 à 01:26
 -- Version du serveur : 8.3.0
 -- Version de PHP : 8.2.18
 
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `reservation` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `spectacle` (`spectacle`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Déchargement des données de la table `reservation`
@@ -49,7 +49,8 @@ INSERT INTO `reservation` (`id`, `user`, `spectacle`, `date`) VALUES
 (4, 6, 2, '2025-10-31'),
 (5, 6, 2, '2026-04-09'),
 (6, 6, 2, '2027-11-24'),
-(7, 6, 3, '2062-11-06');
+(7, 6, 3, '2062-11-06'),
+(8, 6, 1, '2025-11-04');
 
 -- --------------------------------------------------------
 
@@ -89,9 +90,11 @@ CREATE TABLE IF NOT EXISTS `user` (
   `lastname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `role` varchar(25) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
-  `refresh_token` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `role` varchar(25) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
+  `refresh_token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `refresh_token_expires_at` datetime DEFAULT NULL,
+  `mfa_method` enum('TOTP','EMAIL') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `mfa_secret` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -99,13 +102,13 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- Déchargement des données de la table `user`
 --
 
-INSERT INTO `user` (`id`, `firstname`, `lastname`, `email`, `password`, `role`, `refresh_token`, `refresh_token_expires_at`) VALUES
-(1, 'STÉPHANE', 'DESCARPENTRIES', 'stephane.descarpentries@hotmail.fr', '$2y$10$fBhWaLbAewKciFCVjpTwNuF/IGmB8VP2Vqdj1A6D1jD7NCbmHaA4e', 'admin', '66f1bbbc30496bb6697bd46b0e58975781d34700f8d04b3bce9f21ba7e3176822c13915317aae567ff14f193fc268d031fddd2f287c93464b160440ef8e55fed', '2025-11-06 00:20:56'),
-(2, 'Amaury', 'Sanschaussette', 'amaury.sanschaussette@gmail.com', '$2y$10$OhYWjtLKYrtoI8WkLFG/6.yBeSP9TIGxhDpzpGNNnoWP3Ttt/WjFq', 'user', NULL, NULL),
-(3, 'Adrien', 'Lardon', 'adrien.lardon@gmail.fr', '$2y$10$gS1M.nkVo60FoMD86L2UV.pdMlQP5VqS/.gZbK8URyJl0bf.GXKhq', 'user', NULL, NULL),
-(4, 'Woodis', 'Stephlane', 'woodis.stephlane@yahoo.com', '$2y$10$QAR9dVr1s0o527uy86645.ElU2J.CMzqhctLpZbGpIOJPxlBs5vhy', 'user', NULL, NULL),
-(5, 'Compte', 'Admin', 'compte.admin@gmail.fr', '$2y$10$lmgjvcY/6cPp7HjfIZ5KLuvXTbsWl8p65.XF4oNrOcDWBM29yEdJm', 'admin', 'b5024ca7d17ab6cd746c830c96008e67282de767f429d830baf29b071aef604273d14b988bc75d473ba3d2cf836346210d4355979e385fd813c29bb0e81c4bab', '2025-11-06 00:51:22'),
-(6, 'Compte', 'User', 'compte.user@gmail.fr', '$2y$10$U06qrJGfI0qax6FrNmjgKe75qqe35gghQ3vpdeRxDh6oiMNsq7tRm', 'user', '7388a18830e3c537c433a761021212b6d3b14cb9b2b7be8f3e5610f88101af525b292dba6e263c3faa30fb9d96f1e3c795067fdeb9bf3c4ec79f981d4e0e68ea', '2025-11-06 01:01:28');
+INSERT INTO `user` (`id`, `firstname`, `lastname`, `email`, `password`, `role`, `refresh_token`, `refresh_token_expires_at`, `mfa_method`, `mfa_secret`) VALUES
+(1, 'STÉPHANE', 'DESCARPENTRIES', 'stephane.descarpentries@hotmail.fr', '$2y$10$fBhWaLbAewKciFCVjpTwNuF/IGmB8VP2Vqdj1A6D1jD7NCbmHaA4e', 'admin', 'c907a62c4a92d9f999fdfc95c56ed0f32010bcc8d7b507ad17d93a7e51453bf2286c9373604a8569b409a04acbaab0a7f16ac5a35ba9c20bff1848a8a81b1e3f', '2025-11-15 01:15:48', 'EMAIL', '$2y$10$PMXwojU4KbxsX1sILAYaXedgFlaFAaIsUKV4aWewjxM10AsKgN7gi|2025-11-08 01:20:35'),
+(2, 'Amaury', 'Sanschaussette', 'amaury.sanschaussette@gmail.com', '$2y$10$OhYWjtLKYrtoI8WkLFG/6.yBeSP9TIGxhDpzpGNNnoWP3Ttt/WjFq', 'user', NULL, NULL, NULL, NULL),
+(3, 'Adrien', 'Lardon', 'adrien.lardon@gmail.fr', '$2y$10$gS1M.nkVo60FoMD86L2UV.pdMlQP5VqS/.gZbK8URyJl0bf.GXKhq', 'user', NULL, NULL, NULL, NULL),
+(4, 'Woodis', 'Stephlane', 'woodis.stephlane@yahoo.com', '$2y$10$QAR9dVr1s0o527uy86645.ElU2J.CMzqhctLpZbGpIOJPxlBs5vhy', 'user', NULL, NULL, NULL, NULL),
+(5, 'Compte', 'Admin', 'compte.admin@gmail.fr', '$2y$10$lmgjvcY/6cPp7HjfIZ5KLuvXTbsWl8p65.XF4oNrOcDWBM29yEdJm', 'admin', 'b5024ca7d17ab6cd746c830c96008e67282de767f429d830baf29b071aef604273d14b988bc75d473ba3d2cf836346210d4355979e385fd813c29bb0e81c4bab', '2025-11-06 00:51:22', NULL, NULL),
+(6, 'Compte', 'User', 'compte.user@gmail.fr', '$2y$10$U06qrJGfI0qax6FrNmjgKe75qqe35gghQ3vpdeRxDh6oiMNsq7tRm', 'user', '564ed22673629f3a94c3a62b154cd02bd54ab10a52c6810d6182ad7cc9af5a1f754dc05a3df3125b2f2048189ebe56ff845033b0d55b41202f234372b57f08b5', '2025-11-14 21:31:06', 'TOTP', 'MZFLJBJX2O4775UP7ZEEF5QQCGTWUV6W');
 
 --
 -- Contraintes pour les tables déchargées
