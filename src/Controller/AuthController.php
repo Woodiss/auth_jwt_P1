@@ -12,6 +12,9 @@ use App\Repository\UserRepository;
 use App\Security\AuthMiddleware;
 use RobThree\Auth\TwoFactorAuth;
 use RobThree\Auth\Providers\Qr\QRServerProvider;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use Dotenv\Dotenv;
 
 
 final class AuthController
@@ -81,6 +84,46 @@ final class AuthController
                   } else {
                       // ✅ Vérification de la double authentification
                       if ($user->getMfaMethod()) {
+
+                          // === CAS OTP MAIL ===
+                          if ($user->getMfaMethod() === 'EMAIL') {
+
+                              // Génération du code à usage unique
+                              $code    = (string) random_int(100000, 999999);
+                              $hash    = password_hash($code, PASSWORD_DEFAULT);
+                              $expires = (new DateTime('+5 minutes'))->format('Y-m-d H:i:s');
+                              $bundle  = $hash . "|" . $expires;
+
+                              // Sauvegarde du code haché et expiration
+                              $repo->storeEmailOtpBundle($bundle, $user->getId());
+
+                              // Envoi du mail
+                              $mail = new PHPMailer(true);
+                              try {
+                                  $dotenv = Dotenv::createImmutable(dirname(__DIR__, 2));
+                                  $dotenv->load();
+                                  $mail->isSMTP();
+                                  $mail->Host       = $_ENV['SMTP_HOST'];
+                                  $mail->SMTPAuth   = true;
+                                  $mail->Username   = $_ENV['SMTP_USER'];
+                                  $mail->Password   = $_ENV['SMTP_PASS'];
+                                  $mail->SMTPSecure = $_ENV['SMTP_SECURE'];
+                                  $mail->Port       = (int) $_ENV['SMTP_PORT'];
+
+                                  $mail->setFrom('noreply@authjwt.local', 'Auth_JWT_P1');
+                                  $mail->addAddress($user->getEmail());
+                                  $mail->isHTML(true);
+                                  $mail->Subject = 'Votre code de vérification';
+                                  $mail->Body    = "<p>Bonjour,</p>
+                                                    <p>Votre code est : <b>$code</b></p>
+                                                    <p>Il expire dans 5 minutes.</p>";
+
+                                  $mail->send();
+                              } catch (Exception $e) {
+                                  $errors['global'] = "Impossible d'envoyer le mail : {$mail->ErrorInfo}";
+                              }
+                          }
+
                           // Stocke l'ID de l'utilisateur dans la session
                           $_SESSION['pending_user_id'] = $user->getId();
 
@@ -89,7 +132,7 @@ final class AuthController
                           exit;
                       }
 
-                      // 🔓 Si pas de 2FA : connexion normale (ton code existant)
+                      // 🔓 Si pas de 2FA : connexion normale
                       $token = $this->jwt->generate([
                           'id'   => $user->getId(),
                           'firstname' => $user->getFirstName(),
@@ -118,7 +161,6 @@ final class AuthController
                       exit;
                   }
               } catch (\Throwable $e) {
-                  var_dump($e);
                   $errors['global'] = "Erreur lors de la connexion.";
               }
           }
@@ -293,16 +335,14 @@ final class AuthController
 
               $repo = new UserRepository();
               $userId = $this->getUser()['id'];
-              $repo->storeEmailOtpBundle($bundle, $userId); // 👉 À créer aussi
-
-              // ❗ Envoi email à faire ici (ex: PHP mailer)
-
-              header('Location: ' . $this->basePath . '/mfa/email/confirm', true, 303);
+              $repo->storeEmailOtpBundle($bundle, $userId);
+              header('Location: ' . $this->basePath . '/', true, 303);
               exit;
           }
       }
 
       echo $this->twig->render('totp/user_secu.html.twig', [
+          'user'    => $this->getUser(),
           'data'    => $data,
           'errors'  => $errors,
           'success' => $success,

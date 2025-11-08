@@ -1,7 +1,8 @@
 # Mini-application PHP de gestion de spectacles
 
-Projet académique d’application web en **PHP orienté objet**, intégrant un système d’**authentification JWT sans dépendance externe (tel que Firebase)**.  
-L’application simule un **site de réservation de spectacles** avec une gestion complète des utilisateurs, rôles et accès.  
+Projet académique d’application web en **PHP** orienté objet, intégrant un système complet d’authentification **JWT** sans dépendance externe (type Firebase), enrichi par une double authentification (**2FA**) via e-mail ou application mobile.  
+L’application simule un site de réservation de spectacles avec une gestion complète des utilisateurs, rôles et sécurité.  
+Elle illustre les fondamentaux d’une architecture MVC simplifiée : routeur, contrôleurs, entités, vues, sécurité via tokens **JWT + refresh tokens** et authentification **multi-facteurs** (2FA).
 
 L’objectif est d’illustrer les **fondamentaux d’une architecture MVC simplifiée** :  
 Routeur, contrôleurs, entités, vues, et sécurité via **tokens JWT + refresh tokens**.
@@ -15,6 +16,9 @@ Routeur, contrôleurs, entités, vues, et sécurité via **tokens JWT + refresh 
 - 🛠️ **Pages administrateurs** : ajout et gestion des spectacles  
 - ⚙️ **Gestion des droits** via middleware `#[IsGranted]` et attributs PHP  
 - 💾 **Base de données** : MySQL / phpMyAdmin  
+- 🔒 **Système MFA** (Multi-Factor Authentication) configurable :
+  - 📧 Par **e-mail** (OTP) : envoi d’un code à usage unique à chaque connexion
+  - 📱 Par **QR Code** (TOTP) : compatible Google Authenticator, Authy, etc.
 
 ---
 
@@ -24,7 +28,7 @@ Routeur, contrôleurs, entités, vues, et sécurité via **tokens JWT + refresh 
 Avant d’installer le projet, assurez-vous d’avoir :
 
 - Un **serveur local** (XAMPP, Laragon, WAMP, etc.)  
-- **PHP 8** ou version ultérieure  
+- **PHP 8.2.x**  
 - **Composer** pour la gestion des dépendances  
 - Une base de données **MySQL** (via phpMyAdmin)
 
@@ -54,6 +58,12 @@ DB_NAME=auth_jwt_p1
 DB_USER=root
 DB_PASS=
 DB_CHARSET=utf8mb4
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=ton.email@gmail.com
+SMTP_PASS="ton_mot_de_passe_application"
+SMTP_SECURE=tls
 ```
 
 ### 4. Importer la base de données
